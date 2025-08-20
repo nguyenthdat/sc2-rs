@@ -9,9 +9,8 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-sc2-proto = "0.2.3"
-# sc2-proto = { path = "../sc2-proto-rs" }
-protobuf = "^2"
+sc2-proto = { version = "0.2.3", features = ["protoc-rust"] }
+protobuf = { version = "^3", features = ["with-bytes"] }
 sc2-macro = { path = "sc2-macro", version = "1" }
 tungstenite = { version = "^0.27.0", default-features = false, features = [
     "handshake",
@@ -45,3 +44,6 @@ protoc = ["sc2-proto/protoc-rust"]
 enemies_cache = []
 wine_sc2 = []
 rayon = ["dep:rayon", "indexmap/rayon", "ndarray/rayon"]
+
+[patch.crates-io]
+sc2-proto = { git = "https://github.com/nguyenthdat/sc2-proto-rs" }
