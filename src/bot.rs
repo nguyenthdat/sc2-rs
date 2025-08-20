@@ -1,10 +1,11 @@
 //! [`Bot`] struct and it's helpers.
 
 use crate::{
+	FromProto, IntoProto,
 	action::{Action, ActionResult, Commander, Target},
 	api::API,
 	client::SC2Result,
-	consts::{RaceValues, FRAMES_PER_SECOND, INHIBITOR_IDS, RACE_VALUES, TECH_ALIAS, UNIT_ALIAS},
+	consts::{FRAMES_PER_SECOND, INHIBITOR_IDS, RACE_VALUES, RaceValues, TECH_ALIAS, UNIT_ALIAS},
 	debug::{DebugCommand, Debugger},
 	distance::*,
 	game_data::{Cost, GameData},
@@ -18,7 +19,6 @@ use crate::{
 	unit::{DataForUnit, SharedUnitData, Unit},
 	units::{AllUnits, Units},
 	utils::{dbscan, range_query},
-	FromProto, IntoProto,
 };
 use indexmap::IndexSet;
 use num_traits::ToPrimitive;
@@ -42,8 +42,8 @@ use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 #[cfg(feature = "rayon")]
 use std::sync::{
-	atomic::{AtomicBool, AtomicU32, Ordering},
 	Arc,
+	atomic::{AtomicBool, AtomicU32, Ordering},
 };
 
 #[cfg(not(feature = "rayon"))]
@@ -878,7 +878,7 @@ impl Bot {
 		.0;
 
 		const OFFSET: isize = 7;
-		let offsets = iproduct!((-OFFSET..=OFFSET), (-OFFSET..=OFFSET))
+		let offsets = iproduct!(-OFFSET..=OFFSET, -OFFSET..=OFFSET)
 			.filter(|(x, y)| {
 				let d = x * x + y * y;
 				16 < d && d <= 64
@@ -1510,7 +1510,8 @@ impl Bot {
 			vec![(self.game_data.units[&building].ability.unwrap(), pos, None)],
 			false,
 		)
-		.unwrap()[0] == ActionResult::Success
+		.unwrap()[0]
+			== ActionResult::Success
 	}
 	/// Simple wrapper around [`query_placement`](Self::query_placement).
 	/// Multi-version of [`can_place`](Self::can_place).
@@ -1610,7 +1611,7 @@ impl Bot {
 
 					if !valid_positions.is_empty() {
 						return if options.random {
-							valid_positions.choose(&mut thread_rng()).copied()
+							valid_positions.choose(&mut rand::rng()).copied()
 						} else {
 							valid_positions.iter().closest(near).copied()
 						};

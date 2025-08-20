@@ -19,20 +19,20 @@ impl API {
 	pub fn send(&self, req: Request) -> SC2Result<Response> {
 		let mut ws = self.0.write_lock();
 
-		ws.write_message(Binary(req.write_to_bytes()?))?;
+		ws.send(Binary(req.write_to_bytes()?.into()))?;
 
-		let msg = ws.read_message()?;
+		let msg = ws.read()?;
 
 		let mut res = Response::new();
-		res.merge_from_bytes(msg.into_data().as_slice())?;
+		res.merge_from_bytes(&msg.into_data().to_vec())?;
 		Ok(res)
 	}
 
 	/// Sends request, waits for the response, but ignores it (useful when response is empty).
 	pub fn send_request(&self, req: Request) -> SC2Result<()> {
 		let mut ws = self.0.write_lock();
-		ws.write_message(Binary(req.write_to_bytes()?))?;
-		let _ = ws.read_message()?;
+		ws.send(Binary(req.write_to_bytes()?.into()))?;
+		let _ = ws.read()?;
 		Ok(())
 	}
 
@@ -42,17 +42,17 @@ impl API {
 	/// [`send`]: Self::send
 	/// [`send_request`]: Self::send_request
 	pub fn send_only(&self, req: Request) -> SC2Result<()> {
-		self.0.write_lock().write_message(Binary(req.write_to_bytes()?))?;
+		self.0.write_lock().send(Binary(req.write_to_bytes()?.into()))?;
 		Ok(())
 	}
 	/// Waits for a response (useful only after [`send_only`]).
 	///
 	/// [`send_only`]: Self::send_only
 	pub fn wait_response(&self) -> SC2Result<Response> {
-		let msg = self.0.write_lock().read_message()?;
+		let msg = self.0.write_lock().read()?;
 
 		let mut res = Response::new();
-		res.merge_from_bytes(msg.into_data().as_slice())?;
+		res.merge_from_bytes(&msg.into_data().to_vec())?;
 		Ok(res)
 	}
 }
