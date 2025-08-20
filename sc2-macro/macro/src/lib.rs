@@ -4,8 +4,8 @@ extern crate quote;
 use proc_macro::TokenStream;
 use regex::Regex;
 use syn::{
-	parse_macro_input, Attribute, Data, DeriveInput, Expr, Fields, ItemEnum, ItemFn, ItemStruct, Meta,
-	NestedMeta, Stmt,
+	parse::Parse, parse_macro_input, Attribute, Data, DeriveInput, Expr, Fields, ItemEnum, ItemFn,
+	ItemStruct, Meta, Stmt,
 };
 
 #[proc_macro_attribute]
@@ -30,7 +30,7 @@ pub fn bot(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
 	TokenStream::from(quote! {
 		#(#attrs)*
-		#vis struct #name#generics {
+		quote! { #vis struct #name #generics } {
 			_bot: rust_sc2::bot::Bot,
 			#fields
 		}
@@ -57,7 +57,7 @@ pub fn bot_new(_attr: TokenStream, item: TokenStream) -> TokenStream {
 	let vis = item.vis;
 	let signature = item.sig;
 	let blocks = item.block.stmts.iter().map(|s| match s {
-		Stmt::Expr(Expr::Struct(struct_expr)) => {
+		Stmt::Expr(Expr::Struct(struct_expr), _) => {
 			let path = &struct_expr.path;
 			let rest = match &struct_expr.rest {
 				Some(expr) => quote! {#expr},
@@ -92,11 +92,11 @@ pub fn enum_from_str_derive(input: TokenStream) -> TokenStream {
 		// let variants2 = variants.clone().map(|v| format!("{}::{}", name, v));
 
 		let additional_attributes = |a: &Attribute| {
-			if a.path.is_ident("enum_from_str") {
-				if let Meta::List(list) = a.parse_meta().unwrap() {
-					return list.nested.iter().any(|n| {
-						if let NestedMeta::Meta(Meta::Path(path)) = n {
-							path.is_ident("use_primitives")
+			if a.path().is_ident("enum_from_str") {
+				if let Meta::List(list) = a.parse_args_with(Meta::parse).unwrap() {
+					return list.tokens.clone().into_iter().any(|token| {
+						if let proc_macro2::TokenTree::Ident(ident) = token {
+							ident == "use_primitives"
 						} else {
 							false
 						}

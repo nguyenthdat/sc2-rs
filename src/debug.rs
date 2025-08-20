@@ -3,13 +3,15 @@
 use crate::{
 	geometry::{Point2, Point3},
 	ids::UnitTypeId,
-	IntoProto,
+	unit, IntoProto,
 };
 use num_traits::ToPrimitive;
 use rustc_hash::FxHashSet;
 use sc2_proto::debug::{
-	DebugBox, DebugCommand as ProtoDebugCommand, DebugDraw as ProtoDebugDraw, DebugEndGame_EndResult,
-	DebugGameState as ProtoDebugGameState, DebugLine, DebugSetUnitValue_UnitValue, DebugSphere, DebugText,
+	debug_end_game::EndResult as DebugEndGame_EndResult,
+	debug_set_unit_value::UnitValue as DebugSetUnitValue_UnitValue, DebugBox,
+	DebugCommand as ProtoDebugCommand, DebugDraw as ProtoDebugDraw, DebugGameState as ProtoDebugGameState,
+	DebugLine, DebugSphere, DebugText,
 };
 
 type Color = (u32, u32, u32);
@@ -203,10 +205,13 @@ impl IntoProto<ProtoDebugCommand> for &DebugCommand {
 				if let Some(owner) = owner {
 					unit.set_owner(*owner as i32);
 				}
-				unit.set_pos(pos.into_proto());
+				let unit_pos = unit.pos.as_mut().unwrap();
+				unit_pos.set_x(pos.x);
+				unit_pos.set_y(pos.y);
+
 				unit.set_quantity(*count);
 			}
-			DebugCommand::KillUnit(tags) => proto.mut_kill_unit().set_tag(tags.to_vec()),
+			DebugCommand::KillUnit(tags) => proto.mut_kill_unit().tag = tags.to_vec(),
 			DebugCommand::EndGame(win) => {
 				let end_game = proto.mut_end_game();
 				if *win {
@@ -234,14 +239,19 @@ impl IntoProto<ProtoDebugDraw> for &[DebugDraw] {
 					proto_text.set_text(text.to_string());
 					match pos {
 						DebugPos::Screen((x, y)) => {
-							let pos = proto_text.mut_virtual_pos();
+							let pos = proto_text.virtual_pos.as_mut().unwrap();
 							pos.set_x(*x);
 							pos.set_y(*y);
 						}
-						DebugPos::World(p) => proto_text.set_world_pos(p.into_proto()),
+						DebugPos::World(p) => {
+							let world_pos = proto_text.world_pos.as_mut().unwrap();
+							world_pos.set_x(p.x);
+							world_pos.set_y(p.y);
+							world_pos.set_z(p.z);
+						}
 					}
 					if let Some((r, g, b)) = color {
-						let proto_color = proto_text.mut_color();
+						let proto_color = proto_text.color.as_mut().unwrap();
 						proto_color.set_r(*r);
 						proto_color.set_g(*g);
 						proto_color.set_b(*b);
@@ -249,44 +259,60 @@ impl IntoProto<ProtoDebugDraw> for &[DebugDraw] {
 					if let Some(s) = size {
 						proto_text.set_size(*s);
 					}
-					cmds.mut_text().push(proto_text);
+					cmds.text.push(proto_text);
 				}
 				DebugDraw::Line(p0, p1, color) => {
 					let mut proto_line = DebugLine::new();
-					let line = proto_line.mut_line();
-					line.set_p0(p0.into_proto());
-					line.set_p1(p1.into_proto());
+					let line = proto_line.line.as_ref().unwrap_or_default();
+					line.p0.set_x(p0.x);
+					line.p0.set_y(p0.y);
+					line.p0.set_z(p0.z);
+
+					line.p1.set_x(p1.x);
+					line.p1.set_y(p1.y);
+					line.p1.set_z(p1.z);
+
 					if let Some((r, g, b)) = color {
-						let proto_color = proto_line.mut_color();
+						let mut proto_color = proto_line.color;
+						let proto_color = proto_color.as_mut().unwrap();
 						proto_color.set_r(*r);
 						proto_color.set_g(*g);
 						proto_color.set_b(*b);
 					}
-					cmds.mut_lines().push(proto_line);
+					cmds.lines.push(proto_line);
 				}
 				DebugDraw::Box(p0, p1, color) => {
 					let mut proto_box = DebugBox::new();
-					proto_box.set_min(p0.into_proto());
-					proto_box.set_max(p1.into_proto());
+					proto_box.min.set_x(p0.x);
+					proto_box.min.set_y(p0.y);
+					proto_box.min.set_z(p0.z);
+
+					proto_box.max.set_x(p1.x);
+					proto_box.max.set_y(p1.y);
+					proto_box.max.set_z(p1.z);
+					
 					if let Some((r, g, b)) = color {
-						let proto_color = proto_box.mut_color();
+						let proto_color = proto_box.color;
 						proto_color.set_r(*r);
 						proto_color.set_g(*g);
 						proto_color.set_b(*b);
 					}
-					cmds.mut_boxes().push(proto_box);
+					cmds.boxes.push(proto_box);
 				}
 				DebugDraw::Sphere(pos, radius, color) => {
 					let mut proto_sphere = DebugSphere::new();
-					proto_sphere.set_p(pos.into_proto());
+					proto_sphere.p.set_x(pos.x);
+					proto_sphere.p.set_y(pos.y);
+					proto_sphere.p.set_z(pos.z);
+
 					proto_sphere.set_r(*radius);
 					if let Some((r, g, b)) = color {
-						let proto_color = proto_sphere.mut_color();
+						let proto_color = proto_sphere.color;
 						proto_color.set_r(*r);
 						proto_color.set_g(*g);
 						proto_color.set_b(*b);
 					}
-					cmds.mut_spheres().push(proto_sphere);
+					cmds.spheres.push(proto_sphere);
 				}
 			}
 		}

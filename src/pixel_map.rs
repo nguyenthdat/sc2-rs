@@ -1,7 +1,7 @@
 //! Data structures, used to store map data.
 #![allow(missing_docs)]
 
-use crate::{geometry::Point2, FromProto};
+use crate::{FromProto, geometry::Point2};
 use ndarray::Array2;
 use num_traits::FromPrimitive;
 use sc2_proto::common::ImageData;
@@ -38,10 +38,10 @@ fn to_binary(n: u8) -> impl Iterator<Item = Pixel> {
 
 impl FromProto<&ImageData> for PixelMap {
 	fn from_proto(grid: &ImageData) -> Self {
-		let size = grid.get_size();
+		let size = grid.size.as_ref().unwrap_or_default();
 		Array2::from_shape_vec(
-			(size.get_y() as usize, size.get_x() as usize),
-			grid.get_data().iter().flat_map(|n| to_binary(*n)).collect(),
+			(size.y() as usize, size.x() as usize),
+			grid.data().iter().flat_map(|n| to_binary(*n)).collect(),
 		)
 		.expect("Can't create PixelMap")
 		.reversed_axes()
@@ -49,21 +49,18 @@ impl FromProto<&ImageData> for PixelMap {
 }
 impl FromProto<&ImageData> for ByteMap {
 	fn from_proto(grid: &ImageData) -> Self {
-		let size = grid.get_size();
-		Array2::from_shape_vec(
-			(size.get_y() as usize, size.get_x() as usize),
-			grid.get_data().to_vec(),
-		)
-		.expect("Can't create ByteMap")
-		.reversed_axes()
+		let size = grid.size.as_ref().unwrap_or_default();
+		Array2::from_shape_vec((size.y() as usize, size.x() as usize), grid.data().to_vec())
+			.expect("Can't create ByteMap")
+			.reversed_axes()
 	}
 }
 impl FromProto<&ImageData> for VisibilityMap {
 	fn from_proto(grid: &ImageData) -> Self {
-		let size = grid.get_size();
+		let size = grid.size.as_ref().unwrap_or_default();
 		Array2::from_shape_vec(
-			(size.get_y() as usize, size.get_x() as usize),
-			grid.get_data()
+			(size.y() as usize, size.x() as usize),
+			grid.data()
 				.iter()
 				.map(|n| {
 					Visibility::from_u8(*n)

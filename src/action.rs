@@ -47,7 +47,7 @@ impl IntoProto<ProtoAction> for &Action {
 		let mut action = ProtoAction::new();
 		match self {
 			Action::Chat(message, team_only) => {
-				let mut chat_action = action.action_chat;
+				let chat_action = action.action_chat.as_mut().unwrap();
 				chat_action.set_channel({
 					if *team_only {
 						ActionChat_Channel::Team
@@ -58,7 +58,7 @@ impl IntoProto<ProtoAction> for &Action {
 				chat_action.set_message(message.to_string());
 			}
 			Action::UnitCommand(ability, target, units, queue) => {
-				let unit_command = action.action_raw.mut_unit_command();
+				let unit_command = action.action_raw.as_mut().unwrap().mut_unit_command();
 				unit_command.set_ability_id(ability.to_i32().unwrap());
 				match target {
 					Target::Pos(pos) => unit_command.set_target_world_space_pos(pos.into_proto()),

@@ -1,11 +1,10 @@
 //! [`Bot`] struct and it's helpers.
 
 use crate::{
-	FromProto, IntoProto,
 	action::{Action, ActionResult, Commander, Target},
 	api::API,
 	client::SC2Result,
-	consts::{FRAMES_PER_SECOND, INHIBITOR_IDS, RACE_VALUES, RaceValues, TECH_ALIAS, UNIT_ALIAS},
+	consts::{RaceValues, FRAMES_PER_SECOND, INHIBITOR_IDS, RACE_VALUES, TECH_ALIAS, UNIT_ALIAS},
 	debug::{DebugCommand, Debugger},
 	distance::*,
 	game_data::{Cost, GameData},
@@ -19,6 +18,7 @@ use crate::{
 	unit::{DataForUnit, SharedUnitData, Unit},
 	units::{AllUnits, Units},
 	utils::{dbscan, range_query},
+	FromProto, IntoProto,
 };
 use indexmap::IndexSet;
 use num_traits::ToPrimitive;
@@ -42,8 +42,8 @@ use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 #[cfg(feature = "rayon")]
 use std::sync::{
-	Arc,
 	atomic::{AtomicBool, AtomicU32, Ordering},
+	Arc,
 };
 
 #[cfg(not(feature = "rayon"))]
@@ -1684,7 +1684,7 @@ impl Bot {
 	/// where element is distance of path from start to goal or `None` if there's no path.
 	pub fn query_pathing(&self, paths: Vec<(Target, Point2)>) -> SC2Result<Vec<Option<f32>>> {
 		let mut req = Request::new();
-		let req_pathing = req.mut_query().mut_pathing();
+		let mut req_pathing = req.mut_query().pathing;
 
 		for (start, goal) in paths {
 			let mut pathing = RequestQueryPathing::new();
@@ -1693,17 +1693,14 @@ impl Bot {
 				Target::Pos(pos) => pathing.set_start_pos(pos.into_proto()),
 				Target::None => panic!("start pos is not specified in query pathing request"),
 			}
-			pathing.set_end_pos(goal.into_proto());
+			pathing.end_pos.set_x(goal.x);
+			pathing.end_pos.set_y(goal.y);
+
 			req_pathing.push(pathing);
 		}
 
 		let res = self.api().send(req)?;
-		Ok(res
-			.get_query()
-			.get_pathing()
-			.iter()
-			.map(|result| result.distance)
-			.collect())
+		Ok(res.query().pathing.iter().map(|result| result.distance).collect())
 	}
 	/// Sends placement requests to API.
 	/// Takes creep, psionic matrix, and other stuff into account.
@@ -1725,12 +1722,13 @@ impl Bot {
 		let mut req = Request::new();
 		let req_query = req.mut_query();
 		req_query.set_ignore_resource_requirements(!check_resources);
-		let req_placement = req_query.mut_placements();
+		let mut req_placement = req_query.placements;
 
 		for (ability, pos, builder) in places {
 			let mut placement = RequestQueryBuildingPlacement::new();
 			placement.set_ability_id(ability.to_i32().unwrap());
-			placement.set_target_pos(pos.into_proto());
+			placement.target_pos.set_x(pos.x);
+			placement.target_pos.set_y(pos.y);
 			if let Some(tag) = builder {
 				placement.set_placing_unit_tag(tag);
 			}
@@ -1739,10 +1737,10 @@ impl Bot {
 
 		let res = self.api().send(req)?;
 		Ok(res
-			.get_query()
-			.get_placements()
+			.query()
+			.placements
 			.iter()
-			.map(|result| ActionResult::from_proto(result.get_result()))
+			.map(|result| ActionResult::from_proto(result.result()))
 			.collect())
 	}
 

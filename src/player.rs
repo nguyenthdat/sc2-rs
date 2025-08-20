@@ -2,7 +2,6 @@
 #![allow(missing_docs)]
 
 use crate::{FromProto, IntoProto};
-use num_traits::FromPrimitive;
 use sc2_proto::{
 	common::Race as ProtoRace,
 	sc2api::{
@@ -53,7 +52,6 @@ impl IntoProto<ProtoRace> for Race {
 /// Difficulty of in-game AI.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Copy, Clone, FromPrimitive, FromStr)]
-#[enum_from_str(use_primitives)]
 pub enum Difficulty {
 	VeryEasy,
 	Easy,
