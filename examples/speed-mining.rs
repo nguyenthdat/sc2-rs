@@ -13,7 +13,7 @@ struct LightningMcQueen {
 }
 
 impl Player for LightningMcQueen {
-	fn get_player_settings(&self) -> PlayerSettings {
+	fn get_player_settings(&'_ self) -> PlayerSettings<'_> {
 		PlayerSettings::new(self.race).raw_crop_to_playable_area(true)
 	}
 

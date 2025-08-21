@@ -132,7 +132,7 @@ macro_rules! impl_simple_iterator {
 }
 
 macro_rules! make_simple_iterator {
-	($(#[$attr:meta])* $name:ident, $pred:expr) => {
+	($(#[$attr:meta])* $name:ident, $pred:expr_2021) => {
 		$(#[$attr])*
 		#[derive(Clone)]
 		pub struct $name<I> {
@@ -144,7 +144,7 @@ macro_rules! make_simple_iterator {
 				Self { iter }
 			}
 
-			fn predicate(&self) -> impl Fn(&Unit) -> bool {
+			fn predicate(&self) -> impl Fn(&Unit) -> bool + use<I> {
 				$pred
 			}
 		}
@@ -166,7 +166,7 @@ impl<'a, I, T: Container<u64>> FindTags<'a, I, T> {
 		Self { iter, tags }
 	}
 
-	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a {
+	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a + use<'a, I, T> {
 		let tags = self.tags;
 		move |u| tags.contains(&u.tag())
 	}
@@ -203,7 +203,7 @@ impl<I> OfType<I> {
 		Self { iter, unit_type }
 	}
 
-	fn predicate(&self) -> impl Fn(&Unit) -> bool {
+	fn predicate(&self) -> impl Fn(&Unit) -> bool + use<I> {
 		let unit_type = self.unit_type;
 		move |u| u.type_id() == unit_type
 	}
@@ -221,7 +221,7 @@ impl<I> ExcludeType<I> {
 		Self { iter, unit_type }
 	}
 
-	fn predicate(&self) -> impl Fn(&Unit) -> bool {
+	fn predicate(&self) -> impl Fn(&Unit) -> bool + use<I> {
 		let unit_type = self.unit_type;
 		move |u| u.type_id() != unit_type
 	}
@@ -239,7 +239,7 @@ impl<'a, I, T: Container<UnitTypeId>> OfTypes<'a, I, T> {
 		Self { iter, types }
 	}
 
-	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a {
+	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a + use<'a, I, T> {
 		let types = self.types;
 		move |u| types.contains(&u.type_id())
 	}
@@ -276,7 +276,7 @@ impl<'a, I, T: Container<UnitTypeId>> ExcludeTypes<'a, I, T> {
 		Self { iter, types }
 	}
 
-	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a {
+	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a + use<'a, I, T> {
 		let types = self.types;
 		move |u| !types.contains(&u.type_id())
 	}
@@ -369,7 +369,7 @@ impl<'a, I> InRangeOf<'a, I> {
 		Self { iter, unit, gap }
 	}
 
-	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a {
+	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a + use<'a, I> {
 		let unit = self.unit;
 		let gap = self.gap;
 		move |u| unit.in_range(u, gap)
@@ -389,7 +389,7 @@ impl<'a, I> InRange<'a, I> {
 		Self { iter, unit, gap }
 	}
 
-	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a {
+	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a + use<'a, I> {
 		let unit = self.unit;
 		let gap = self.gap;
 		move |u| u.in_range(unit, gap)
@@ -409,7 +409,7 @@ impl<'a, I> InRealRangeOf<'a, I> {
 		Self { iter, unit, gap }
 	}
 
-	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a {
+	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a + use<'a, I> {
 		let unit = self.unit;
 		let gap = self.gap;
 		move |u| unit.in_real_range(u, gap)
@@ -429,7 +429,7 @@ impl<'a, I> InRealRange<'a, I> {
 		Self { iter, unit, gap }
 	}
 
-	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a {
+	fn predicate(&self) -> impl Fn(&Unit) -> bool + 'a + use<'a, I> {
 		let unit = self.unit;
 		let gap = self.gap;
 		move |u| u.in_real_range(unit, gap)
@@ -447,7 +447,7 @@ where
 		self.find(|u| u.borrow().tag() == tag)
 	}
 	/// Leaves only units with given tags.
-	fn find_tags<T: Container<u64>>(self, tags: &T) -> FindTags<Self, T> {
+	fn find_tags<T: Container<u64>>(self, tags: &T) -> FindTags<'_, Self, T> {
 		FindTags::new(self, tags)
 	}
 	/// Leaves only units of given type.
@@ -459,11 +459,11 @@ where
 		ExcludeType::new(self, unit_type)
 	}
 	/// Leaves only units of given types.
-	fn of_types<T: Container<UnitTypeId>>(self, types: &T) -> OfTypes<Self, T> {
+	fn of_types<T: Container<UnitTypeId>>(self, types: &'_ T) -> OfTypes<'_, Self, T> {
 		OfTypes::new(self, types)
 	}
 	/// Excludes units of given types.
-	fn exclude_types<T: Container<UnitTypeId>>(self, types: &T) -> ExcludeTypes<Self, T> {
+	fn exclude_types<T: Container<UnitTypeId>>(self, types: &T) -> ExcludeTypes<'_, Self, T> {
 		ExcludeTypes::new(self, types)
 	}
 	/// Leaves only non-flying units.
@@ -505,21 +505,21 @@ where
 		Visible::new(self)
 	}
 	/// Leaves only units in attack range of given unit.
-	fn in_range_of(self, unit: &Unit, gap: f32) -> InRangeOf<Self> {
+	fn in_range_of(self, unit: &Unit, gap: f32) -> InRangeOf<'_, Self> {
 		InRangeOf::new(self, unit, gap)
 	}
 	/// Leaves only units that are close enough to attack given unit.
-	fn in_range(self, unit: &Unit, gap: f32) -> InRange<Self> {
+	fn in_range(self, unit: &Unit, gap: f32) -> InRange<'_, Self> {
 		InRange::new(self, unit, gap)
 	}
 	/// Leaves only units in attack range of given unit.
 	/// Unlike [`in_range_of`](Self::in_range_of) this takes range upgrades into account.
-	fn in_real_range_of(self, unit: &Unit, gap: f32) -> InRealRangeOf<Self> {
+	fn in_real_range_of(self, unit: &Unit, gap: f32) -> InRealRangeOf<'_, Self> {
 		InRealRangeOf::new(self, unit, gap)
 	}
 	/// Leaves only units that are close enough to attack given unit.
 	/// Unlike [`in_range`](Self::in_range) this takes range upgrades into account.
-	fn in_real_range(self, unit: &Unit, gap: f32) -> InRealRange<Self> {
+	fn in_real_range(self, unit: &Unit, gap: f32) -> InRealRange<'_, Self> {
 		InRealRange::new(self, unit, gap)
 	}
 }

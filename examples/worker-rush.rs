@@ -65,7 +65,7 @@ impl Player for WorkerRushAI {
 		Ok(())
 	}
 
-	fn get_player_settings(&self) -> PlayerSettings {
+	fn get_player_settings(&'_ self) -> PlayerSettings<'_> {
 		PlayerSettings::new(Race::Protoss).with_name("RustyWorkers")
 	}
 }

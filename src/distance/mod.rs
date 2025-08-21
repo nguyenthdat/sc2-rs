@@ -268,7 +268,7 @@ impl<I> Closer<I> {
 		}
 	}
 
-	fn predicate<T: Distance + Copy>(&self) -> impl Fn(&T) -> bool {
+	fn predicate<T: Distance + Copy>(&self) -> impl Fn(&T) -> bool + use<T, I> {
 		let distance = self.distance;
 		let target = self.target;
 		move |u| u.is_closer(distance, target)
@@ -292,7 +292,7 @@ impl<I> Further<I> {
 		}
 	}
 
-	fn predicate<T: Distance + Copy>(&self) -> impl Fn(&T) -> bool {
+	fn predicate<T: Distance + Copy>(&self) -> impl Fn(&T) -> bool + use<T, I> {
 		let distance = self.distance;
 		let target = self.target;
 		move |u| u.is_further(distance, target)

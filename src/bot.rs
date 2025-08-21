@@ -78,11 +78,11 @@ pub(crate) type Writer<'a, T> = RwLockWriteGuard<'a, T>;
 pub(crate) type Writer<'a, T> = RefMut<'a, T>;
 
 pub(crate) trait Locked<T> {
-	fn read_lock(&self) -> Reader<T>;
-	fn write_lock(&self) -> Writer<T>;
+	fn read_lock(&'_ self) -> Reader<'_, T>;
+	fn write_lock(&'_ self) -> Writer<'_, T>;
 }
 impl<T> Locked<T> for Rl<T> {
-	fn read_lock(&self) -> Reader<T> {
+	fn read_lock(&'_ self) -> Reader<'_, T> {
 		#[cfg(feature = "rayon")]
 		{
 			#[cfg(feature = "parking_lot")]
@@ -99,7 +99,7 @@ impl<T> Locked<T> for Rl<T> {
 			self.borrow()
 		}
 	}
-	fn write_lock(&self) -> Writer<T> {
+	fn write_lock(&'_ self) -> Writer<'_, T> {
 		#[cfg(feature = "rayon")]
 		{
 			#[cfg(feature = "parking_lot")]
@@ -513,14 +513,14 @@ impl Bot {
 	/// ```
 	/// let count = self.counter().all().tech().count(UnitTypeId::CommandCenter);
 	/// ```
-	pub fn counter(&self) -> CountOptions {
+	pub fn counter(&'_ self) -> CountOptions<'_> {
 		CountOptions::new(self, false)
 	}
 	/// The same as [`counter`](Self::counter), but counts enemy units instead.
 	///
 	/// All information about enemy units count is based on scouting.
 	/// Also there's no way to see ordered enemy units, but bot sees enemy structures in-progress.
-	pub fn enemy_counter(&self) -> CountOptions {
+	pub fn enemy_counter(&'_ self) -> CountOptions<'_> {
 		CountOptions::new(self, true)
 	}
 	pub(crate) fn get_actions(&mut self) -> &[Action] {
@@ -676,7 +676,7 @@ impl Bot {
 		self.enemy_upgrades.read_lock().contains(&upgrade)
 	}
 	/// Returns mutable set of predicted opponent's upgrades.
-	pub fn enemy_upgrades(&self) -> Writer<FxHashSet<UpgradeId>> {
+	pub fn enemy_upgrades(&'_ self) -> Writer<'_, FxHashSet<UpgradeId>> {
 		self.enemy_upgrades.write_lock()
 	}
 	/// Checks if upgrade is in progress.
@@ -685,7 +685,7 @@ impl Bot {
 		self.orders
 			.get(&ability)
 			.copied()
-			.map_or(false, |count| count > 0)
+			.is_some_and(|count| count > 0)
 	}
 	/// Returns progress of making given upgrade.
 	/// - `1` - complete
@@ -745,14 +745,14 @@ impl Bot {
 		self.game_info
 			.placement_grid
 			.get(pos.into())
-			.map_or(false, |p| p.is_empty())
+			.is_some_and(|p| p.is_empty())
 	}
 	/// Checks if it's possible for ground units to walk through given position.
 	pub fn is_pathable<P: Into<(usize, usize)>>(&self, pos: P) -> bool {
 		self.game_info
 			.pathing_grid
 			.get(pos.into())
-			.map_or(false, |p| p.is_empty())
+			.is_some_and(|p| p.is_empty())
 	}
 	/// Checks if given position is hidden (wasn't explored before).
 	pub fn is_hidden<P: Into<(usize, usize)>>(&self, pos: P) -> bool {
@@ -761,7 +761,7 @@ impl Bot {
 			.raw
 			.visibility
 			.get(pos.into())
-			.map_or(true, |p| p.is_hidden())
+			.is_none_or(|p| p.is_hidden())
 	}
 	/// Checks if given position is in fog of war (was explored before).
 	pub fn is_fogged<P: Into<(usize, usize)>>(&self, pos: P) -> bool {
@@ -770,7 +770,7 @@ impl Bot {
 			.raw
 			.visibility
 			.get(pos.into())
-			.map_or(true, |p| p.is_fogged())
+			.is_none_or(|p| p.is_fogged())
 	}
 	/// Checks if given position is visible now.
 	pub fn is_visible<P: Into<(usize, usize)>>(&self, pos: P) -> bool {
@@ -779,7 +779,7 @@ impl Bot {
 			.raw
 			.visibility
 			.get(pos.into())
-			.map_or(false, |p| p.is_visible())
+			.is_some_and(|p| p.is_visible())
 	}
 	/// Checks if given position is fully hidden
 	/// (terrain isn't visible, only darkness; only in campain and custom maps).
@@ -789,7 +789,7 @@ impl Bot {
 			.raw
 			.visibility
 			.get(pos.into())
-			.map_or(true, |p| p.is_full_hidden())
+			.is_none_or(|p| p.is_full_hidden())
 	}
 	/// Checks if given position is not hidden (was explored before).
 	pub fn is_explored<P: Into<(usize, usize)>>(&self, pos: P) -> bool {
@@ -798,7 +798,7 @@ impl Bot {
 			.raw
 			.visibility
 			.get(pos.into())
-			.map_or(false, |p| p.is_explored())
+			.is_some_and(|p| p.is_explored())
 	}
 	/// Checks if given position has zerg's creep.
 	pub fn has_creep<P: Into<(usize, usize)>>(&self, pos: P) -> bool {
@@ -808,7 +808,7 @@ impl Bot {
 			.creep
 			.read_lock()
 			.get(pos.into())
-			.map_or(false, |p| p.is_empty())
+			.is_some_and(|p| p.is_empty())
 	}
 	pub(crate) fn init_data_for_unit(&mut self) {
 		self.race = self.game_info.players[&self.player_id].race_actual.unwrap();
@@ -1136,7 +1136,7 @@ impl Bot {
 		let units = &mut self.units;
 		for u in &all_units {
 			macro_rules! add_to {
-				($group:expr) => {{
+				($group:expr_2021) => {{
 					$group.push(u.clone());
 				}};
 			}
@@ -1684,7 +1684,7 @@ impl Bot {
 	/// where element is distance of path from start to goal or `None` if there's no path.
 	pub fn query_pathing(&self, paths: Vec<(Target, Point2)>) -> SC2Result<Vec<Option<f32>>> {
 		let mut req = Request::new();
-		let mut req_pathing = req.mut_query().pathing;
+		let mut req_pathing = req.mut_query().pathing.clone();
 
 		for (start, goal) in paths {
 			let mut pathing = RequestQueryPathing::new();
@@ -1693,8 +1693,8 @@ impl Bot {
 				Target::Pos(pos) => pathing.set_start_pos(pos.into_proto()),
 				Target::None => panic!("start pos is not specified in query pathing request"),
 			}
-			pathing.end_pos.set_x(goal.x);
-			pathing.end_pos.set_y(goal.y);
+			pathing.end_pos.as_mut().unwrap().set_x(goal.x);
+			pathing.end_pos.as_mut().unwrap().set_y(goal.y);
 
 			req_pathing.push(pathing);
 		}
@@ -1722,13 +1722,13 @@ impl Bot {
 		let mut req = Request::new();
 		let req_query = req.mut_query();
 		req_query.set_ignore_resource_requirements(!check_resources);
-		let mut req_placement = req_query.placements;
+		let mut req_placement = req_query.placements.clone();
 
 		for (ability, pos, builder) in places {
 			let mut placement = RequestQueryBuildingPlacement::new();
 			placement.set_ability_id(ability.to_i32().unwrap());
-			placement.target_pos.set_x(pos.x);
-			placement.target_pos.set_y(pos.y);
+			placement.target_pos.as_mut().unwrap().set_x(pos.x);
+			placement.target_pos.as_mut().unwrap().set_y(pos.y);
 			if let Some(tag) = builder {
 				placement.set_placing_unit_tag(tag);
 			}

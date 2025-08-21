@@ -556,7 +556,7 @@ fn join_game2(settings: &PlayerSettings, api: &API, ports: Option<&Ports>) -> SC
 
 	req_join_game.set_race(settings.race.into_proto());
 
-	let mut options = req_join_game.options;
+	let options = req_join_game.options.as_mut().unwrap();
 	options.set_raw(true);
 	options.set_score(true);
 	// options.mut_feature_layer()
@@ -573,7 +573,7 @@ fn join_game2(settings: &PlayerSettings, api: &API, ports: Option<&Ports>) -> SC
 	if let Some(ports) = ports {
 		// req_join_game.set_shared_port(ports.shared);
 
-		let mut server_ports = req_join_game.server_ports;
+		let server_ports = req_join_game.server_ports.as_mut().unwrap();
 		server_ports.set_game_port(ports.server.0);
 		server_ports.set_base_port(ports.server.1);
 
@@ -623,7 +623,7 @@ where
 	let bot_actions = bot.get_actions();
 	if !bot_actions.is_empty() {
 		let mut req = Request::new();
-		let mut actions = req.mut_action().actions;
+		let actions = &mut req.mut_action().actions;
 		for a in bot_actions {
 			actions.push(a.into_proto());
 		}
@@ -673,7 +673,7 @@ where
 	if !bot_actions.is_empty() {
 		// println!("{:?}: {:?}", iteration, bot_actions);
 		let mut req = Request::new();
-		let mut actions = req.mut_action().actions;
+		let mut actions = req.mut_action().actions.clone();
 		for a in bot_actions {
 			actions.push(a.into_proto());
 		}
@@ -691,7 +691,7 @@ where
 	let bot_debug_commands = bot.get_debug_commands();
 	if !bot_debug_commands.is_empty() {
 		let mut req = Request::new();
-		let mut debug_commands = req.mut_debug().debug;
+		let mut debug_commands = req.mut_debug().debug.clone();
 		for cmd in bot_debug_commands {
 			debug_commands.push(cmd.into_proto())
 		}

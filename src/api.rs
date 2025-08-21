@@ -24,7 +24,7 @@ impl API {
 		let msg = ws.read()?;
 
 		let mut res = Response::new();
-		res.merge_from_bytes(&msg.into_data().to_vec())?;
+		res.merge_from_bytes(&msg.into_data())?;
 		Ok(res)
 	}
 
@@ -52,7 +52,7 @@ impl API {
 		let msg = self.0.write_lock().read()?;
 
 		let mut res = Response::new();
-		res.merge_from_bytes(&msg.into_data().to_vec())?;
+		res.merge_from_bytes(&msg.into_data())?;
 		Ok(res)
 	}
 }

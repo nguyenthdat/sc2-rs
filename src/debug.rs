@@ -3,7 +3,7 @@
 use crate::{
 	geometry::{Point2, Point3},
 	ids::UnitTypeId,
-	unit, IntoProto,
+	IntoProto,
 };
 use num_traits::ToPrimitive;
 use rustc_hash::FxHashSet;
@@ -263,18 +263,17 @@ impl IntoProto<ProtoDebugDraw> for &[DebugDraw] {
 				}
 				DebugDraw::Line(p0, p1, color) => {
 					let mut proto_line = DebugLine::new();
-					let line = proto_line.line.as_ref().unwrap_or_default();
-					line.p0.set_x(p0.x);
-					line.p0.set_y(p0.y);
-					line.p0.set_z(p0.z);
+					let line = proto_line.line.as_mut().unwrap();
+					line.p0.as_mut().unwrap().set_x(p0.x);
+					line.p0.as_mut().unwrap().set_y(p0.y);
+					line.p0.as_mut().unwrap().set_z(p0.z);
 
-					line.p1.set_x(p1.x);
-					line.p1.set_y(p1.y);
-					line.p1.set_z(p1.z);
+					line.p1.as_mut().unwrap().set_x(p1.x);
+					line.p1.as_mut().unwrap().set_y(p1.y);
+					line.p1.as_mut().unwrap().set_z(p1.z);
 
 					if let Some((r, g, b)) = color {
-						let mut proto_color = proto_line.color;
-						let proto_color = proto_color.as_mut().unwrap();
+						let proto_color = proto_line.color.as_mut().unwrap();
 						proto_color.set_r(*r);
 						proto_color.set_g(*g);
 						proto_color.set_b(*b);
@@ -283,16 +282,16 @@ impl IntoProto<ProtoDebugDraw> for &[DebugDraw] {
 				}
 				DebugDraw::Box(p0, p1, color) => {
 					let mut proto_box = DebugBox::new();
-					proto_box.min.set_x(p0.x);
-					proto_box.min.set_y(p0.y);
-					proto_box.min.set_z(p0.z);
+					proto_box.min.as_mut().unwrap().set_x(p0.x);
+					proto_box.min.as_mut().unwrap().set_y(p0.y);
+					proto_box.min.as_mut().unwrap().set_z(p0.z);
 
-					proto_box.max.set_x(p1.x);
-					proto_box.max.set_y(p1.y);
-					proto_box.max.set_z(p1.z);
-					
+					proto_box.max.as_mut().unwrap().set_x(p1.x);
+					proto_box.max.as_mut().unwrap().set_y(p1.y);
+					proto_box.max.as_mut().unwrap().set_z(p1.z);
+
 					if let Some((r, g, b)) = color {
-						let proto_color = proto_box.color;
+						let proto_color = proto_box.color.as_mut().unwrap();
 						proto_color.set_r(*r);
 						proto_color.set_g(*g);
 						proto_color.set_b(*b);
@@ -301,13 +300,13 @@ impl IntoProto<ProtoDebugDraw> for &[DebugDraw] {
 				}
 				DebugDraw::Sphere(pos, radius, color) => {
 					let mut proto_sphere = DebugSphere::new();
-					proto_sphere.p.set_x(pos.x);
-					proto_sphere.p.set_y(pos.y);
-					proto_sphere.p.set_z(pos.z);
+					proto_sphere.p.as_mut().unwrap().set_x(pos.x);
+					proto_sphere.p.as_mut().unwrap().set_y(pos.y);
+					proto_sphere.p.as_mut().unwrap().set_z(pos.z);
 
 					proto_sphere.set_r(*radius);
 					if let Some((r, g, b)) = color {
-						let proto_color = proto_sphere.color;
+						let proto_color = proto_sphere.color.as_mut().unwrap();
 						proto_color.set_r(*r);
 						proto_color.set_g(*g);
 						proto_color.set_b(*b);

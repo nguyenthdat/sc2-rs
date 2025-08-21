@@ -69,13 +69,13 @@ impl IntoProto<ProtoAction> for &Action {
 				unit_command.set_queue_command(*queue);
 			}
 			Action::CameraMove(pos) => {
-				let camera_move = action.action_raw.mut_camera_move();
-				camera_move.center_world_space.set_x(pos.x);
-				camera_move.center_world_space.set_y(pos.y);
-				camera_move.center_world_space.set_z(pos.z);
+				let camera_move = action.action_raw.as_mut().unwrap().mut_camera_move();
+				camera_move.center_world_space.as_mut().unwrap().set_x(pos.x);
+				camera_move.center_world_space.as_mut().unwrap().set_y(pos.y);
+				camera_move.center_world_space.as_mut().unwrap().set_z(pos.z);
 			}
 			Action::ToggleAutocast(ability, units) => {
-				let toggle_autocast = action.action_raw.mut_toggle_autocast();
+				let toggle_autocast = action.action_raw.as_mut().unwrap().mut_toggle_autocast();
 				toggle_autocast.set_ability_id(ability.to_i32().unwrap());
 				toggle_autocast.unit_tags = units.clone();
 			}

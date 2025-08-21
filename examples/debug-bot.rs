@@ -1,4 +1,5 @@
 use rust_sc2::{geometry::Point3, prelude::*};
+use sc2_macro::bot;
 
 mod ex_main;
 
@@ -28,7 +29,7 @@ impl Player for DebugAI {
 		Ok(())
 	}
 
-	fn get_player_settings(&self) -> PlayerSettings {
+	fn get_player_settings(&'_ self) -> PlayerSettings<'_> {
 		PlayerSettings::new(self.race)
 	}
 }

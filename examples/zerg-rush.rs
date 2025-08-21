@@ -41,7 +41,7 @@ impl Player for ZergRushAI {
 		Ok(())
 	}
 
-	fn get_player_settings(&self) -> PlayerSettings {
+	fn get_player_settings(&'_ self) -> PlayerSettings<'_> {
 		PlayerSettings::new(Race::Zerg).with_name("RustyLings")
 	}
 }
@@ -252,7 +252,8 @@ impl ZergRushAI {
 			.iter()
 			.filter(|u| {
 				!(u.is_constructing()
-					|| u.is_returning() || u.is_carrying_resource()
+					|| u.is_returning()
+					|| u.is_carrying_resource()
 					|| (u.is_gathering() && u.target_tag().map_or(true, |tag| !mineral_tags.contains(&tag))))
 			})
 			.closest(pos)

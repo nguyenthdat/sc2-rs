@@ -4,7 +4,7 @@ use rust_sc2::prelude::*;
 #[derive(Default)]
 struct EmptyBot;
 impl Player for EmptyBot {
-	fn get_player_settings(&self) -> PlayerSettings {
+	fn get_player_settings(&'_ self) -> PlayerSettings<'_> {
 		PlayerSettings::new(Race::Random)
 	}
 }

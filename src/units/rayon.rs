@@ -18,31 +18,31 @@ where
 impl Units {
 	/// Returns parallel iterator over the units of the collection.
 	#[inline]
-	pub fn par_iter(&self) -> ParValues<u64, Unit> {
+	pub fn par_iter(&'_ self) -> ParValues<'_, u64, Unit> {
 		self.0.par_values()
 	}
 
 	/// Returns mutable parallel iterator over the units of the collection.
 	#[inline]
-	pub fn par_iter_mut(&mut self) -> ParValuesMut<u64, Unit> {
+	pub fn par_iter_mut(&'_ mut self) -> ParValuesMut<'_, u64, Unit> {
 		self.0.par_values_mut()
 	}
 
 	/// Returns parallel iterator over (tag, unit) pairs of the collection.
 	#[inline]
-	pub fn par_pairs(&self) -> ParIter<u64, Unit> {
+	pub fn par_pairs(&'_ self) -> ParIter<'_, u64, Unit> {
 		self.0.par_iter()
 	}
 
 	/// Returns mutable parallel iterator over (tag, unit) pairs of the collection.
 	#[inline]
-	pub fn par_pairs_mut(&mut self) -> ParIterMut<u64, Unit> {
+	pub fn par_pairs_mut(&'_ mut self) -> ParIterMut<'_, u64, Unit> {
 		self.0.par_iter_mut()
 	}
 
 	/// Returns parallel iterator over unit tags of the collection.
 	#[inline]
-	pub fn par_tags(&self) -> ParKeys<u64, Unit> {
+	pub fn par_tags(&'_ self) -> ParKeys<'_, u64, Unit> {
 		self.0.par_keys()
 	}
 
@@ -260,7 +260,7 @@ where
 		self.find_any(|u| u.borrow().tag() == tag)
 	}
 	/// Leaves only units with given tags.
-	fn find_tags<T: Container<u64>>(self, tags: &T) -> FindTags<Self, T> {
+	fn find_tags<T: Container<u64>>(self, tags: &'_ T) -> FindTags<'_, Self, T> {
 		FindTags::new(self, tags)
 	}
 	/// Leaves only units of given type.
@@ -272,11 +272,11 @@ where
 		ExcludeType::new(self, unit_type)
 	}
 	/// Leaves only units of given types.
-	fn of_types<T: Container<UnitTypeId>>(self, types: &T) -> OfTypes<Self, T> {
+	fn of_types<T: Container<UnitTypeId>>(self, types: &'_ T) -> OfTypes<'_, Self, T> {
 		OfTypes::new(self, types)
 	}
 	/// Excludes units of given types.
-	fn exclude_types<T: Container<UnitTypeId>>(self, types: &T) -> ExcludeTypes<Self, T> {
+	fn exclude_types<T: Container<UnitTypeId>>(self, types: &'_ T) -> ExcludeTypes<'_, Self, T> {
 		ExcludeTypes::new(self, types)
 	}
 	/// Leaves only non-flying units.
@@ -318,21 +318,21 @@ where
 		Visible::new(self)
 	}
 	/// Leaves only units in attack range of given unit.
-	fn in_range_of(self, unit: &Unit, gap: f32) -> InRangeOf<Self> {
+	fn in_range_of(self, unit: &'_ Unit, gap: f32) -> InRangeOf<'_, Self> {
 		InRangeOf::new(self, unit, gap)
 	}
 	/// Leaves only units that are close enough to attack given unit.
-	fn in_range(self, unit: &Unit, gap: f32) -> InRange<Self> {
+	fn in_range(self, unit: &'_ Unit, gap: f32) -> InRange<'_, Self> {
 		InRange::new(self, unit, gap)
 	}
 	/// Leaves only units in attack range of given unit.
 	/// Unlike [`in_range_of`](Self::in_range_of) this takes range upgrades into account.
-	fn in_real_range_of(self, unit: &Unit, gap: f32) -> InRealRangeOf<Self> {
+	fn in_real_range_of(self, unit: &'_ Unit, gap: f32) -> InRealRangeOf<'_, Self> {
 		InRealRangeOf::new(self, unit, gap)
 	}
 	/// Leaves only units that are close enough to attack given unit.
 	/// Unlike [`in_range`](Self::in_range) this takes range upgrades into account.
-	fn in_real_range(self, unit: &Unit, gap: f32) -> InRealRange<Self> {
+	fn in_real_range(self, unit: &'_ Unit, gap: f32) -> InRealRange<'_, Self> {
 		InRealRange::new(self, unit, gap)
 	}
 }

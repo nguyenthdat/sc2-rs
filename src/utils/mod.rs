@@ -64,7 +64,7 @@ where
 /// - `data`: iterable collection of points (the same data should be passed in [`dbscan`]).
 /// - `distance`: function that should returns distance between 2 given points.
 /// - `epsilon`: maximum distance between neighbors.
-pub fn range_query<'a, DT, P, D, F>(data: DT, distance: F, epsilon: D) -> impl Fn(&P) -> FxIndexSet<P>
+pub fn range_query<'a, DT, P, D, F>(data: DT, distance: F, epsilon: D) -> impl Fn(&P) -> FxIndexSet<P> + use<DT, P, D, F>
 where
 	DT: IntoIterator<Item = &'a P> + Clone,
 	P: Eq + Hash + Clone + 'a,
@@ -85,7 +85,7 @@ use parking_lot::{RwLock, RwLockReadGuard};
 #[cfg(not(feature = "parking_lot"))]
 use std::sync::{RwLock, RwLockReadGuard};
 
-fn read<T>(lock: &RwLock<T>) -> RwLockReadGuard<T> {
+fn read<T>(lock: &'_ RwLock<T>) -> RwLockReadGuard<'_, T> {
 	#[cfg(feature = "parking_lot")]
 	let reader = lock.read();
 	#[cfg(not(feature = "parking_lot"))]

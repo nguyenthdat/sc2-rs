@@ -163,36 +163,36 @@ impl Units {
 	/// Returns `None` if there's no unit with such tag in the collection.
 	#[inline]
 	pub fn remove(&mut self, u: u64) -> Option<Unit> {
-		self.0.remove(&u)
+		self.0.swap_remove(&u)
 	}
 
 	/// Returns an iterator over the units of the collection.
 	#[inline]
-	pub fn iter(&self) -> Values<u64, Unit> {
+	pub fn iter(&self) -> Values<'_, u64, Unit> {
 		self.0.values()
 	}
 
 	/// Returns mutable iterator over the units of the collection.
 	#[inline]
-	pub fn iter_mut(&mut self) -> ValuesMut<u64, Unit> {
+	pub fn iter_mut(&mut self) -> ValuesMut<'_, u64, Unit> {
 		self.0.values_mut()
 	}
 
 	/// Returns an iterator over (tag, unit) pairs of the collection.
 	#[inline]
-	pub fn pairs(&self) -> Iter<u64, Unit> {
+	pub fn pairs(&self) -> Iter<'_, u64, Unit> {
 		self.0.iter()
 	}
 
 	/// Returns mutable iterator over (tag, unit) pairs of the collection.
 	#[inline]
-	pub fn pairs_mut(&mut self) -> IterMut<u64, Unit> {
+	pub fn pairs_mut(&mut self) -> IterMut<'_, u64, Unit> {
 		self.0.iter_mut()
 	}
 
 	/// Returns an iterator over unit tags of the collection.
 	#[inline]
-	pub fn tags(&self) -> Keys<u64, Unit> {
+	pub fn tags(&self) -> Keys<'_, u64, Unit> {
 		self.0.keys()
 	}
 
