@@ -6,10 +6,10 @@
   "rust-analyzer.numThreads": 16,
   "rust-analyzer.testExplorer": true,
   "rust-analyzer.check.workspace": true,
-  "rust-analyzer.check.features": ["protoc", "enemies_cache", "rayon"],
+  "rust-analyzer.check.features": ["protoc", "enemies_cache", "rayon", "serde"],
   "rust-analyzer.showUnlinkedFileNotification": false,
   "rust-analyzer.cachePriming.numThreads": "physical",
-  "rust-analyzer.cargo.features": ["protoc", "enemies_cache", "rayon"],
+  "rust-analyzer.cargo.features": ["protoc", "enemies_cache", "rayon", "serde"],
   "[toml]": {
     "editor.defaultFormatter": "tamasfe.even-better-toml"
   },

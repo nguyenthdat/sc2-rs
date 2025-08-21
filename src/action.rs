@@ -11,7 +11,7 @@ use sc2_proto::{
 	error::ActionResult as ProtoActionResult,
 	raw::{action_raw::Action as ProtoRawAction, action_raw_unit_command::Target as ProtoTarget},
 	sc2api::{
-		action_chat::Channel as ActionChat_Channel, Action as ProtoAction, ActionError as ProtoActionError,
+		action_chat::Channel as ActionChatChannel, Action as ProtoAction, ActionError as ProtoActionError,
 	},
 };
 
@@ -50,9 +50,9 @@ impl IntoProto<ProtoAction> for &Action {
 				let chat_action = action.action_chat.as_mut().unwrap();
 				chat_action.set_channel({
 					if *team_only {
-						ActionChat_Channel::Team
+						ActionChatChannel::Team
 					} else {
-						ActionChat_Channel::Broadcast
+						ActionChatChannel::Broadcast
 					}
 				});
 				chat_action.set_message(message.to_string());
@@ -119,8 +119,8 @@ impl FromProto<&ProtoAction> for Option<Action> {
 			let chat = action.action_chat.as_ref().unwrap();
 			Some(Action::Chat(chat.message().to_string(), {
 				match chat.channel() {
-					ActionChat_Channel::Broadcast => false,
-					ActionChat_Channel::Team => true,
+					ActionChatChannel::Broadcast => false,
+					ActionChatChannel::Team => true,
 				}
 			}))
 		} else {
