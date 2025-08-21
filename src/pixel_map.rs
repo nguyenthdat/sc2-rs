@@ -7,7 +7,7 @@ use num_traits::FromPrimitive;
 use sc2_proto::common::ImageData;
 use std::{
 	fmt,
-	ops::{Index, IndexMut},
+	ops::{Deref, Index, IndexMut},
 };
 
 /// 2-Dimensional Array of pixels, where each pixel is `Set` or is `Empty`.
@@ -38,7 +38,7 @@ fn to_binary(n: u8) -> impl Iterator<Item = Pixel> {
 
 impl FromProto<&ImageData> for PixelMap {
 	fn from_proto(grid: &ImageData) -> Self {
-		let size = grid.size.as_ref().unwrap_or_default();
+		let size = grid.size.deref();
 		Array2::from_shape_vec(
 			(size.y() as usize, size.x() as usize),
 			grid.data().iter().flat_map(|n| to_binary(*n)).collect(),
@@ -49,7 +49,7 @@ impl FromProto<&ImageData> for PixelMap {
 }
 impl FromProto<&ImageData> for ByteMap {
 	fn from_proto(grid: &ImageData) -> Self {
-		let size = grid.size.as_ref().unwrap_or_default();
+		let size = grid.size.deref();
 		Array2::from_shape_vec((size.y() as usize, size.x() as usize), grid.data().to_vec())
 			.expect("Can't create ByteMap")
 			.reversed_axes()
@@ -57,7 +57,7 @@ impl FromProto<&ImageData> for ByteMap {
 }
 impl FromProto<&ImageData> for VisibilityMap {
 	fn from_proto(grid: &ImageData) -> Self {
-		let size = grid.size.as_ref().unwrap_or_default();
+		let size = grid.size.deref();
 		Array2::from_shape_vec(
 			(size.y() as usize, size.x() as usize),
 			grid.data()

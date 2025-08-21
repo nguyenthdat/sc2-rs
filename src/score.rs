@@ -1,5 +1,7 @@
 //! SC2 Score interface.
 
+use std::ops::Deref;
+
 use crate::{FromProto, IntoSC2};
 use sc2_proto::score::{score, CategoryScoreDetails, Score as ProtoScore, VitalScoreDetails};
 
@@ -94,7 +96,7 @@ pub struct Score {
 }
 impl FromProto<&ProtoScore> for Score {
 	fn from_proto(score: &ProtoScore) -> Self {
-		let details = score.score_details.as_ref().expect("Score details not found");
+		let details = score.score_details.deref();
 		Self {
 			score_type: score.score_type().into_sc2(),
 			total_score: score.score(),
@@ -110,32 +112,20 @@ impl FromProto<&ProtoScore> for Score {
 			collection_rate_vespene: details.collection_rate_vespene(),
 			spent_minerals: details.spent_minerals(),
 			spent_vespene: details.spent_vespene(),
-			food_used: details.food_used.as_ref().unwrap_or_default().into_sc2(),
-			killed_minerals: details.killed_minerals.as_ref().unwrap_or_default().into_sc2(),
-			killed_vespene: details.killed_vespene.as_ref().unwrap_or_default().into_sc2(),
-			lost_minerals: details.lost_minerals.as_ref().unwrap_or_default().into_sc2(),
-			lost_vespene: details.lost_vespene.as_ref().unwrap_or_default().into_sc2(),
-			friendly_fire_minerals: details
-				.friendly_fire_minerals
-				.as_ref()
-				.unwrap_or_default()
-				.into_sc2(),
-			friendly_fire_vespene: details
-				.friendly_fire_vespene
-				.as_ref()
-				.unwrap_or_default()
-				.into_sc2(),
-			used_minerals: details.used_minerals.as_ref().unwrap_or_default().into_sc2(),
-			used_vespene: details.used_vespene.as_ref().unwrap_or_default().into_sc2(),
-			total_used_minerals: details
-				.total_used_minerals
-				.as_ref()
-				.unwrap_or_default()
-				.into_sc2(),
-			total_used_vespene: details.total_used_vespene.as_ref().unwrap_or_default().into_sc2(),
-			total_damage_dealt: details.total_damage_dealt.as_ref().unwrap_or_default().into_sc2(),
-			total_damage_taken: details.total_damage_taken.as_ref().unwrap_or_default().into_sc2(),
-			total_healed: details.total_healed.as_ref().unwrap_or_default().into_sc2(),
+			food_used: details.food_used.deref().into_sc2(),
+			killed_minerals: details.killed_minerals.deref().into_sc2(),
+			killed_vespene: details.killed_vespene.deref().into_sc2(),
+			lost_minerals: details.lost_minerals.deref().into_sc2(),
+			lost_vespene: details.lost_vespene.deref().into_sc2(),
+			friendly_fire_minerals: details.friendly_fire_minerals.deref().into_sc2(),
+			friendly_fire_vespene: details.friendly_fire_vespene.deref().into_sc2(),
+			used_minerals: details.used_minerals.deref().into_sc2(),
+			used_vespene: details.used_vespene.deref().into_sc2(),
+			total_used_minerals: details.total_used_minerals.deref().into_sc2(),
+			total_used_vespene: details.total_used_vespene.deref().into_sc2(),
+			total_damage_dealt: details.total_damage_dealt.deref().into_sc2(),
+			total_damage_taken: details.total_damage_taken.deref().into_sc2(),
+			total_healed: details.total_healed.deref().into_sc2(),
 			current_apm: details.current_apm(),
 			current_effective_apm: details.current_effective_apm(),
 		}

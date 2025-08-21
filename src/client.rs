@@ -254,7 +254,7 @@ where
 	/// Runs requested game.
 	pub fn run_game(&mut self) -> SC2Result<()> {
 		let bot_settings = self.bot.get_player_settings();
-		let human_api = self.human.api.as_ref().unwrap();
+		let human_api = self.human.api.as_ref().expect("Host API is not set");
 
 		debug!("Sending CreateGame request to host process");
 		let mut req = Request::new();
@@ -556,7 +556,7 @@ fn join_game2(settings: &PlayerSettings, api: &API, ports: Option<&Ports>) -> SC
 
 	req_join_game.set_race(settings.race.into_proto());
 
-	let options = req_join_game.options.as_mut().unwrap();
+	let options = req_join_game.options.mut_or_insert_default();
 	options.set_raw(true);
 	options.set_score(true);
 	// options.mut_feature_layer()
@@ -573,16 +573,15 @@ fn join_game2(settings: &PlayerSettings, api: &API, ports: Option<&Ports>) -> SC
 	if let Some(ports) = ports {
 		// req_join_game.set_shared_port(ports.shared);
 
-		let server_ports = req_join_game.server_ports.as_mut().unwrap();
+		let server_ports = req_join_game.server_ports.mut_or_insert_default();
 		server_ports.set_game_port(ports.server.0);
 		server_ports.set_base_port(ports.server.1);
 
-		let mut client_ports = req_join_game.client_ports.clone();
 		for client in &ports.client {
 			let mut port_set = PortSet::new();
 			port_set.set_game_port(client.0);
 			port_set.set_base_port(client.1);
-			client_ports.push(port_set);
+			req_join_game.client_ports.push(port_set);
 		}
 	}
 
@@ -673,9 +672,8 @@ where
 	if !bot_actions.is_empty() {
 		// println!("{:?}: {:?}", iteration, bot_actions);
 		let mut req = Request::new();
-		let mut actions = req.mut_action().actions.clone();
 		for a in bot_actions {
-			actions.push(a.into_proto());
+			req.mut_action().actions.push(a.into_proto());
 		}
 		bot.clear_actions();
 		bot.api().send_request(req)?;
@@ -691,9 +689,8 @@ where
 	let bot_debug_commands = bot.get_debug_commands();
 	if !bot_debug_commands.is_empty() {
 		let mut req = Request::new();
-		let mut debug_commands = req.mut_debug().debug.clone();
 		for cmd in bot_debug_commands {
-			debug_commands.push(cmd.into_proto())
+			req.mut_debug().debug.push(cmd.into_proto())
 		}
 		bot.clear_debug_commands();
 		bot.api().send_request(req)?;

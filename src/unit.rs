@@ -1,6 +1,8 @@
 //! Stuff for convenient interaction with [`Unit`]s.
 #![allow(missing_docs)]
 
+use std::ops::Deref;
+
 use crate::{
 	action::{Commander, Target},
 	bot::{LockBool, LockOwned, LockU32, Locked, Reader, Rl, Rs, Rw},
@@ -1918,7 +1920,7 @@ impl From<Unit> for Point2 {
 
 impl Unit {
 	pub(crate) fn from_proto(data: SharedUnitData, visibility: &VisibilityMap, u: &ProtoUnit) -> Self {
-		let pos = u.pos.as_ref().expect("Unit without position");
+		let pos = u.pos.deref();
 		let position = Point2::from_proto(pos);
 		let type_id = {
 			let id = u.unit_type();
@@ -2045,7 +2047,7 @@ impl Unit {
 					.rally_targets
 					.iter()
 					.map(|t| RallyTarget {
-						point: Point2::from_proto(t.point.as_ref().expect("Rally target without position")),
+						point: Point2::from_proto(t.point.deref()),
 						tag: t.tag,
 					})
 					.collect(),

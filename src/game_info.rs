@@ -9,7 +9,7 @@ use crate::{
 };
 use rustc_hash::FxHashMap;
 use sc2_proto::sc2api::ResponseGameInfo;
-use std::path::Path;
+use std::{ops::Deref, path::Path};
 
 /// Structure where all map information stored.
 #[derive(Default, Clone)]
@@ -42,11 +42,11 @@ pub struct GameInfo {
 }
 impl FromProto<ResponseGameInfo> for GameInfo {
 	fn from_proto(game_info: ResponseGameInfo) -> Self {
-		let start_raw = game_info.start_raw.as_ref().unwrap_or_default();
-		let map_size = start_raw.map_size.as_ref().unwrap_or_default();
-		let area = start_raw.playable_area.as_ref().unwrap_or_default();
-		let area_p0 = area.p0.as_ref().unwrap_or_default();
-		let area_p1 = area.p1.as_ref().unwrap_or_default();
+		let start_raw = game_info.start_raw.deref();
+		let map_size = start_raw.map_size.deref();
+		let area = start_raw.playable_area.deref();
+		let area_p0 = area.p0.deref();
+		let area_p1 = area.p1.deref();
 		let area_p0_x = area_p0.x();
 		let area_p0_y = area_p0.y();
 		let area_p1_x = area_p1.x();
@@ -84,11 +84,9 @@ impl FromProto<ResponseGameInfo> for GameInfo {
 				})
 				.collect(),
 			map_size: Size::new(map_size.x() as usize, map_size.y() as usize),
-			pathing_grid: PixelMap::from_proto(start_raw.pathing_grid.as_ref().unwrap_or_default()),
-			terrain_height: Rs::new(ByteMap::from_proto(
-				start_raw.terrain_height.as_ref().unwrap_or_default(),
-			)),
-			placement_grid: PixelMap::from_proto(start_raw.placement_grid.as_ref().unwrap_or_default()),
+			pathing_grid: PixelMap::from_proto(start_raw.pathing_grid.deref()),
+			terrain_height: Rs::new(ByteMap::from_proto(start_raw.terrain_height.deref())),
+			placement_grid: PixelMap::from_proto(start_raw.placement_grid.deref()),
 			playable_area: Rect::new(
 				area_p0_x as usize,
 				area_p0_y as usize,

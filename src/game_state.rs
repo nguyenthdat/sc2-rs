@@ -68,7 +68,7 @@ where
 
 	// Observation
 	let obs = &mut state.observation;
-	let res_obs = response_observation.observation.as_ref().unwrap_or_default();
+	let res_obs = response_observation.observation.deref();
 
 	obs.game_loop.set_locked(res_obs.game_loop());
 	obs.alerts = res_obs
@@ -90,7 +90,7 @@ where
 	obs.score = Score::from_proto(&res_obs.score);
 
 	// Common
-	let common = res_obs.player_common.as_ref().unwrap_or_default();
+	let common = res_obs.player_common.deref();
 	obs.common = Common {
 		player_id: common.player_id(),
 		minerals: common.minerals(),
@@ -107,15 +107,15 @@ where
 
 	// Raw
 	let raw = &mut obs.raw;
-	let res_raw = res_obs.raw_data.as_ref().unwrap_or_default();
+	let res_raw = res_obs.raw_data.deref();
 
-	let raw_player = res_raw.player.as_ref().unwrap_or_default();
+	let raw_player = res_raw.player.deref();
 	raw.psionic_matrix = raw_player
 		.power_sources
 		.iter()
 		.map(PsionicMatrix::from_proto)
 		.collect();
-	raw.camera = Point2::from_proto(raw_player.camera.as_ref().unwrap_or_default());
+	raw.camera = Point2::from_proto(raw_player.camera.deref());
 	raw.effects = res_raw
 		.effects
 		.iter()
@@ -134,7 +134,7 @@ where
 		.radar
 		.iter()
 		.map(|r| Radar {
-			pos: Point2::from_proto(r.pos.as_ref().unwrap_or_default()),
+			pos: Point2::from_proto(r.pos.deref()),
 			radius: r.radius(),
 		})
 		.collect();
@@ -191,18 +191,17 @@ where
 		.collect::<FxHashSet<_>>();
 
 	// Map
-	let map_state = res_raw.map_state.as_ref().unwrap_or_default();
+	let map_state = res_raw.map_state.deref();
 	// Creep
-	*raw.creep.write_lock() = PixelMap::from_proto(map_state.creep.as_ref().unwrap_or_default());
+	*raw.creep.write_lock() = PixelMap::from_proto(map_state.creep.deref());
 
 	// Available abilities
 	let mut req = Request::new();
-	let mut req_query_abilities = req.mut_query().abilities.clone();
-	for u in res_raw.units.clone() {
+	for u in res_raw.units.iter() {
 		if matches!(u.alliance(), ProtoAlliance::Self_) {
 			let mut req_unit = RequestQueryAvailableAbilities::new();
 			req_unit.set_unit_tag(u.tag());
-			req_query_abilities.push(req_unit);
+			req.mut_query().abilities.push(req_unit);
 		}
 	}
 
@@ -223,7 +222,7 @@ where
 		.collect();
 
 	// Get visiblity
-	let visibility = VisibilityMap::from_proto(map_state.visibility.as_ref().unwrap_or_default());
+	let visibility = VisibilityMap::from_proto(map_state.visibility.deref());
 	// Get units
 	let units = res_raw
 		.units
@@ -354,7 +353,7 @@ pub struct PsionicMatrix {
 impl FromProto<&ProtoPowerSource> for PsionicMatrix {
 	fn from_proto(ps: &ProtoPowerSource) -> Self {
 		Self {
-			pos: Point2::from_proto(ps.pos.as_ref().unwrap_or_default()),
+			pos: Point2::from_proto(ps.pos.deref()),
 			radius: ps.radius(),
 			tag: ps.tag(),
 		}

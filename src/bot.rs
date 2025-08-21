@@ -1681,7 +1681,6 @@ impl Bot {
 	/// where element is distance of path from start to goal or `None` if there's no path.
 	pub fn query_pathing(&self, paths: Vec<(Target, Point2)>) -> SC2Result<Vec<Option<f32>>> {
 		let mut req = Request::new();
-		let mut req_pathing = req.mut_query().pathing.clone();
 
 		for (start, goal) in paths {
 			let mut pathing = RequestQueryPathing::new();
@@ -1690,10 +1689,12 @@ impl Bot {
 				Target::Pos(pos) => pathing.set_start_pos(pos.into_proto()),
 				Target::None => panic!("start pos is not specified in query pathing request"),
 			}
-			pathing.end_pos.as_mut().unwrap().set_x(goal.x);
-			pathing.end_pos.as_mut().unwrap().set_y(goal.y);
 
-			req_pathing.push(pathing);
+			let pathing_end_pos = pathing.end_pos.mut_or_insert_default();
+			pathing_end_pos.set_x(goal.x);
+			pathing_end_pos.set_y(goal.y);
+
+			req.mut_query().pathing.push(pathing);
 		}
 
 		let res = self.api().send(req)?;
@@ -1719,17 +1720,19 @@ impl Bot {
 		let mut req = Request::new();
 		let req_query = req.mut_query();
 		req_query.set_ignore_resource_requirements(!check_resources);
-		let mut req_placement = req_query.placements.clone();
 
 		for (ability, pos, builder) in places {
 			let mut placement = RequestQueryBuildingPlacement::new();
 			placement.set_ability_id(ability.to_i32().unwrap());
-			placement.target_pos.as_mut().unwrap().set_x(pos.x);
-			placement.target_pos.as_mut().unwrap().set_y(pos.y);
+
+			let target_pos = placement.target_pos.mut_or_insert_default();
+			target_pos.set_x(pos.x);
+			target_pos.set_y(pos.y);
+
 			if let Some(tag) = builder {
 				placement.set_placing_unit_tag(tag);
 			}
-			req_placement.push(placement);
+			req_query.placements.push(placement);
 		}
 
 		let res = self.api().send(req)?;

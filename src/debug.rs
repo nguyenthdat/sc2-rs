@@ -205,7 +205,7 @@ impl IntoProto<ProtoDebugCommand> for &DebugCommand {
 				if let Some(owner) = owner {
 					unit.set_owner(*owner as i32);
 				}
-				let unit_pos = unit.pos.as_mut().unwrap();
+				let unit_pos = unit.pos.mut_or_insert_default();
 				unit_pos.set_x(pos.x);
 				unit_pos.set_y(pos.y);
 
@@ -239,19 +239,19 @@ impl IntoProto<ProtoDebugDraw> for &[DebugDraw] {
 					proto_text.set_text(text.to_string());
 					match pos {
 						DebugPos::Screen((x, y)) => {
-							let pos = proto_text.virtual_pos.as_mut().unwrap();
+							let pos = proto_text.virtual_pos.mut_or_insert_default();
 							pos.set_x(*x);
 							pos.set_y(*y);
 						}
 						DebugPos::World(p) => {
-							let world_pos = proto_text.world_pos.as_mut().unwrap();
+							let world_pos = proto_text.world_pos.mut_or_insert_default();
 							world_pos.set_x(p.x);
 							world_pos.set_y(p.y);
 							world_pos.set_z(p.z);
 						}
 					}
 					if let Some((r, g, b)) = color {
-						let proto_color = proto_text.color.as_mut().unwrap();
+						let proto_color = proto_text.color.mut_or_insert_default();
 						proto_color.set_r(*r);
 						proto_color.set_g(*g);
 						proto_color.set_b(*b);
@@ -263,17 +263,22 @@ impl IntoProto<ProtoDebugDraw> for &[DebugDraw] {
 				}
 				DebugDraw::Line(p0, p1, color) => {
 					let mut proto_line = DebugLine::new();
-					let line = proto_line.line.as_mut().unwrap();
-					line.p0.as_mut().unwrap().set_x(p0.x);
-					line.p0.as_mut().unwrap().set_y(p0.y);
-					line.p0.as_mut().unwrap().set_z(p0.z);
 
-					line.p1.as_mut().unwrap().set_x(p1.x);
-					line.p1.as_mut().unwrap().set_y(p1.y);
-					line.p1.as_mut().unwrap().set_z(p1.z);
+					let line = proto_line.line.mut_or_insert_default();
+					let line_p0 = line.p0.mut_or_insert_default();
+					let line_p1 = line.p1.mut_or_insert_default();
+
+					line_p0.set_x(p0.x);
+					line_p0.set_y(p0.y);
+					line_p0.set_z(p0.z);
+
+					line_p1.set_x(p1.x);
+					line_p1.set_y(p1.y);
+					line_p1.set_z(p1.z);
 
 					if let Some((r, g, b)) = color {
-						let proto_color = proto_line.color.as_mut().unwrap();
+						let proto_color = proto_line.color.mut_or_insert_default();
+
 						proto_color.set_r(*r);
 						proto_color.set_g(*g);
 						proto_color.set_b(*b);
@@ -282,16 +287,19 @@ impl IntoProto<ProtoDebugDraw> for &[DebugDraw] {
 				}
 				DebugDraw::Box(p0, p1, color) => {
 					let mut proto_box = DebugBox::new();
-					proto_box.min.as_mut().unwrap().set_x(p0.x);
-					proto_box.min.as_mut().unwrap().set_y(p0.y);
-					proto_box.min.as_mut().unwrap().set_z(p0.z);
+					let proto_box_min = proto_box.min.mut_or_insert_default();
+					let proto_box_max = proto_box.max.mut_or_insert_default();
 
-					proto_box.max.as_mut().unwrap().set_x(p1.x);
-					proto_box.max.as_mut().unwrap().set_y(p1.y);
-					proto_box.max.as_mut().unwrap().set_z(p1.z);
+					proto_box_min.set_x(p0.x);
+					proto_box_min.set_y(p0.y);
+					proto_box_min.set_z(p0.z);
+
+					proto_box_max.set_x(p1.x);
+					proto_box_max.set_y(p1.y);
+					proto_box_max.set_z(p1.z);
 
 					if let Some((r, g, b)) = color {
-						let proto_color = proto_box.color.as_mut().unwrap();
+						let proto_color = proto_box.color.mut_or_insert_default();
 						proto_color.set_r(*r);
 						proto_color.set_g(*g);
 						proto_color.set_b(*b);
@@ -300,13 +308,16 @@ impl IntoProto<ProtoDebugDraw> for &[DebugDraw] {
 				}
 				DebugDraw::Sphere(pos, radius, color) => {
 					let mut proto_sphere = DebugSphere::new();
-					proto_sphere.p.as_mut().unwrap().set_x(pos.x);
-					proto_sphere.p.as_mut().unwrap().set_y(pos.y);
-					proto_sphere.p.as_mut().unwrap().set_z(pos.z);
+					let proto_sphere_p = proto_sphere.p.mut_or_insert_default();
+
+					proto_sphere_p.set_x(pos.x);
+					proto_sphere_p.set_y(pos.y);
+					proto_sphere_p.set_z(pos.z);
 
 					proto_sphere.set_r(*radius);
 					if let Some((r, g, b)) = color {
-						let proto_color = proto_sphere.color.as_mut().unwrap();
+						let proto_color = proto_sphere.color.mut_or_insert_default();
+
 						proto_color.set_r(*r);
 						proto_color.set_g(*g);
 						proto_color.set_b(*b);

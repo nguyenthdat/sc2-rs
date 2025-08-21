@@ -42,40 +42,40 @@ pub enum Action {
 	ToggleAutocast(AbilityId, Vec<u64>),
 	Chat(String, bool),
 }
+
 impl IntoProto<ProtoAction> for &Action {
 	fn into_proto(self) -> ProtoAction {
 		let mut action = ProtoAction::new();
 		match self {
 			Action::Chat(message, team_only) => {
-				let chat_action = action.action_chat.as_mut().unwrap();
-				chat_action.set_channel({
-					if *team_only {
-						ActionChatChannel::Team
-					} else {
-						ActionChatChannel::Broadcast
-					}
+				let chat_action = action.action_chat.mut_or_insert_default();
+				chat_action.set_channel(if *team_only {
+					ActionChatChannel::Team
+				} else {
+					ActionChatChannel::Broadcast
 				});
 				chat_action.set_message(message.to_string());
 			}
 			Action::UnitCommand(ability, target, units, queue) => {
-				let unit_command = action.action_raw.as_mut().unwrap().mut_unit_command();
+				let unit_command = action.action_raw.mut_or_insert_default().mut_unit_command();
 				unit_command.set_ability_id(ability.to_i32().unwrap());
 				match target {
 					Target::Pos(pos) => unit_command.set_target_world_space_pos(pos.into_proto()),
 					Target::Tag(tag) => unit_command.set_target_unit_tag(*tag),
 					Target::None => {}
 				}
-				unit_command.unit_tags = units.to_vec();
+				unit_command.unit_tags = units.clone();
 				unit_command.set_queue_command(*queue);
 			}
 			Action::CameraMove(pos) => {
-				let camera_move = action.action_raw.as_mut().unwrap().mut_camera_move();
-				camera_move.center_world_space.as_mut().unwrap().set_x(pos.x);
-				camera_move.center_world_space.as_mut().unwrap().set_y(pos.y);
-				camera_move.center_world_space.as_mut().unwrap().set_z(pos.z);
+				let camera_move = action.action_raw.mut_or_insert_default().mut_camera_move();
+				let center = camera_move.center_world_space.mut_or_insert_default();
+				center.set_x(pos.x);
+				center.set_y(pos.y);
+				center.set_z(pos.z);
 			}
 			Action::ToggleAutocast(ability, units) => {
-				let toggle_autocast = action.action_raw.as_mut().unwrap().mut_toggle_autocast();
+				let toggle_autocast = action.action_raw.mut_or_insert_default().mut_toggle_autocast();
 				toggle_autocast.set_ability_id(ability.to_i32().unwrap());
 				toggle_autocast.unit_tags = units.clone();
 			}
@@ -83,46 +83,40 @@ impl IntoProto<ProtoAction> for &Action {
 		action
 	}
 }
+
 impl FromProto<&ProtoAction> for Option<Action> {
 	fn from_proto(action: &ProtoAction) -> Self {
-		// let game_loop: u32 = action.get_game_loop();
-		if action.action_raw.is_some() {
-			match &action.action_raw.as_ref().unwrap().action {
-				Some(ProtoRawAction::UnitCommand(unit_command)) => Some(Action::UnitCommand(
-					{
-						let id = unit_command.ability_id();
-						AbilityId::from_i32(id)
-							.unwrap_or_else(|| panic!("There's no `AbilityId` with value {}", id))
-					},
-					match &unit_command.target {
+		if let Some(raw) = action.action_raw.as_ref() {
+			match &raw.action {
+				Some(ProtoRawAction::UnitCommand(unit_command)) => {
+					let ability = AbilityId::from_i32(unit_command.ability_id())?;
+					let target = match &unit_command.target {
 						Some(ProtoTarget::TargetWorldSpacePos(pos)) => Target::Pos(Point2::from_proto(pos)),
 						Some(ProtoTarget::TargetUnitTag(tag)) => Target::Tag(*tag),
 						_ => Target::None,
-					},
-					unit_command.unit_tags.clone(),
-					unit_command.queue_command(),
-				)),
+					};
+					Some(Action::UnitCommand(
+						ability,
+						target,
+						unit_command.unit_tags.clone(),
+						unit_command.queue_command(),
+					))
+				}
 				Some(ProtoRawAction::CameraMove(camera_move)) => Some(Action::CameraMove(
 					Point3::from_proto(&camera_move.center_world_space),
 				)),
-				Some(ProtoRawAction::ToggleAutocast(toggle_autocast)) => Some(Action::ToggleAutocast(
-					{
-						let id = toggle_autocast.ability_id();
-						AbilityId::from_i32(id)
-							.unwrap_or_else(|| panic!("There's no `AbilityId` with value {}", id))
-					},
-					toggle_autocast.unit_tags.clone(),
-				)),
-				_ => unreachable!(),
-			}
-		} else if action.action_chat.is_some() {
-			let chat = action.action_chat.as_ref().unwrap();
-			Some(Action::Chat(chat.message().to_string(), {
-				match chat.channel() {
-					ActionChatChannel::Broadcast => false,
-					ActionChatChannel::Team => true,
+				Some(ProtoRawAction::ToggleAutocast(toggle_autocast)) => {
+					let ability = AbilityId::from_i32(toggle_autocast.ability_id())?;
+					Some(Action::ToggleAutocast(ability, toggle_autocast.unit_tags.clone()))
 				}
-			}))
+				_ => None,
+			}
+		} else if let Some(chat) = action.action_chat.as_ref() {
+			let team_only = match chat.channel() {
+				ActionChatChannel::Broadcast => false,
+				ActionChatChannel::Team => true,
+			};
+			Some(Action::Chat(chat.message().to_string(), team_only))
 		} else {
 			None
 		}
