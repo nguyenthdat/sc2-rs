@@ -1,7 +1,7 @@
 //! SC2 Score interface.
 
 use crate::{FromProto, IntoSC2};
-use sc2_proto::score::{CategoryScoreDetails, Score as ProtoScore, VitalScoreDetails, score};
+use sc2_proto::score::{score, CategoryScoreDetails, Score as ProtoScore, VitalScoreDetails};
 
 #[variant_checkers]
 #[derive(Clone, Default)]

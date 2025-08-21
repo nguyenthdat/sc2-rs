@@ -1,11 +1,11 @@
 //! Constant information about map, populated on first step.
 
 use crate::{
-	FromProto,
 	bot::Rs,
 	geometry::{Point2, Rect, Size},
 	pixel_map::{ByteMap, PixelMap},
 	player::{AIBuild, Difficulty, PlayerType, Race},
+	FromProto,
 };
 use rustc_hash::FxHashMap;
 use sc2_proto::sc2api::ResponseGameInfo;

@@ -1,4 +1,4 @@
 max_width = 110
 hard_tabs = true
-edition = "2018"
+edition = "2024"
 ignore = ["src/lib.rs", "src/ids"]

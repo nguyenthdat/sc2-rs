@@ -1,7 +1,10 @@
 [package]
 name = "rust-sc2"
-version = "1.2.0"
-authors = ["Armageddon <lunyx1337@gmail.com>"]
+version = "1.2.1"
+authors = [
+    "Armageddon <lunyx1337@gmail.com>",
+    "Dat Nguyen <nguyenthdat@outlook.com>",
+]
 edition = "2021"
 description = "Rust implementation of StarCraft II API"
 repository = "https://github.com/UltraMachine/rust-sc2"

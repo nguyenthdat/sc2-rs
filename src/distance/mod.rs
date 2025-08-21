@@ -147,7 +147,11 @@ where
 	/// Returns center of all iterated points or `None` if iterator is empty.
 	fn center(self) -> Option<Point2> {
 		let (sum, len) = self.fold((Point2::default(), 0), |(sum, len), p| (sum + p.into(), len + 1));
-		if len > 0 { Some(sum / len as f32) } else { None }
+		if len > 0 {
+			Some(sum / len as f32)
+		} else {
+			None
+		}
 	}
 }
 
