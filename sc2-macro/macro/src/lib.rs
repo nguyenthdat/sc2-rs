@@ -112,16 +112,19 @@ pub fn enum_from_str_derive(input: TokenStream) -> TokenStream {
 
 		let additional_attributes = |a: &Attribute| {
 			if a.path.is_ident("enum_from_str") {
-				if let Meta::List(list) = a.parse_meta().unwrap() {
-					return list.nested.iter().any(|n| {
-						if let NestedMeta::Meta(Meta::Path(path)) = n {
-							path.is_ident("use_primitives")
-						} else {
-							false
-						}
-					});
-				} else {
-					unreachable!("No options found in attribute `enum_from_str`")
+				match a.parse_meta().unwrap() {
+					Meta::List(list) => {
+						return list.nested.iter().any(|n| {
+							if let NestedMeta::Meta(Meta::Path(path)) = n {
+								path.is_ident("use_primitives")
+							} else {
+								false
+							}
+						});
+					}
+					_ => {
+						unreachable!("No options found in attribute `enum_from_str`")
+					}
 				}
 			}
 			false
