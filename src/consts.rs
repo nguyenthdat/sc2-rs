@@ -1,5 +1,4 @@
 //! Useful constants and static values.
-#![allow(unused_mut)]
 
 use crate::{
 	game_data::{Attribute, TargetType, Weapon},
