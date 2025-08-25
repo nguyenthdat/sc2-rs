@@ -44,18 +44,18 @@ Create your project
 Add to dependencies in Cargo.toml:
 ```toml
 [dependencies]
-rust-sc2 = "1"
+sc2 = "1"
 ```
 Or if you want developer version directly from github:
 ```toml
 [dependencies]
-rust-sc2 = { git = "https://github.com/UltraMachine/rust-sc2" }
+sc2 = { git = "https://github.com/nguyenthdat/sc2-rs" }
 ```
 
 Or if you want to use a local version:
 ```toml
 [dependencies]
-rust-sc2 = { path = "/path/to/rust-sc2" }
+sc2 = { path = "/path/to/sc2-rs" }
 ```
 
 ## StarCraft II
@@ -84,7 +84,7 @@ rust-sc2 = { path = "/path/to/rust-sc2" }
 # Example
 The simplest competetive bot in less than 30 lines. Copy this into your `/path/to/project/main.rs`
 ```rust
-use rust_sc2::prelude::*;
+use sc2::prelude::*;
 
 #[bot]
 #[derive(Default)]
@@ -123,7 +123,7 @@ Note: The Linux client doesn't have the map `EternalEmpireLE` so you'll need to 
 2. Make sure you have this snippet in your project's **Cargo.toml**:
 ```toml
 [features]
-wine_sc2 = ["rust-sc2/wine_sc2"]
+wine_sc2 = ["sc2/wine_sc2"]
 
 ```
 3. `cargo run --features wine_sc2`
@@ -152,7 +152,7 @@ cargo run --example reaper-rush -- human --help
 ## Making bot step by step
 First of all, import rust-sc2 lib:
 ```rust
-use rust_sc2::prelude::*;
+use sc2::prelude::*;
 ```
 Create your bot's struct (Can be Unit or C-like):
 ```rust

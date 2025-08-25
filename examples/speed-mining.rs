@@ -1,4 +1,4 @@
-use rust_sc2::prelude::*;
+use sc2::prelude::*;
 use std::collections::{HashMap, HashSet};
 
 mod ex_main;

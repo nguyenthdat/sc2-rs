@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
-use rust_sc2::bot::Bot;
-use rust_sc2::prelude::*;
+use sc2::bot::Bot;
+use sc2::prelude::*;
 use std::ops::{Deref, DerefMut};
 
 #[derive(Parser)]

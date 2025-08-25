@@ -1,3 +1,4 @@
+#![allow(clippy::tabs_in_doc_comments)]
 /*!
 # Introduction
 
@@ -26,7 +27,7 @@ rust-sc2 = { git = "https://github.com/UltraMachine/rust-sc2" }
 
 Making bots with `rust-sc2` is pretty easy:
 ```
-use rust_sc2::prelude::*;
+use sc2::prelude::*;
 
 #[bot]
 #[derive(Default)]
@@ -336,7 +337,7 @@ extern crate maplit;
 extern crate log;
 
 /// The most frequent used items and various traits here.
-/// Prefered usage: `use rust_sc2::prelude::*;`.
+/// Prefered usage: `use sc2::prelude::*;`.
 pub mod prelude {
 	#[cfg(feature = "rayon")]
 	pub use crate::distance::rayon::{ParCenter, ParDistanceIterator, ParDistanceSlice};

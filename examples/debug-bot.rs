@@ -1,4 +1,4 @@
-use rust_sc2::{geometry::Point3, prelude::*};
+use sc2::{geometry::Point3, prelude::*};
 use sc2_macro::bot;
 
 mod ex_main;

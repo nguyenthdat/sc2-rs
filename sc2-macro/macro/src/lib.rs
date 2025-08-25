@@ -30,11 +30,11 @@ pub fn bot(_attr: TokenStream, item: TokenStream) -> TokenStream {
 	TokenStream::from(quote! {
 		#(#attrs)*
 		#vis struct #name #ty_generics {
-			_bot: rust_sc2::bot::Bot,
+			_bot: sc2::bot::Bot,
 			#fields
 		}
 		impl #impl_generics std::ops::Deref for #name #ty_generics #where_clause {
-			type Target = rust_sc2::bot::Bot;
+			type Target = sc2::bot::Bot;
 
 			fn deref(&self) -> &Self::Target {
 				&self._bot

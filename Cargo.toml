@@ -1,5 +1,5 @@
 [package]
-name = "rust-sc2"
+name = "sc2"
 version = "1.2.1"
 authors = [
     "Armageddon <lunyx1337@gmail.com>",
@@ -10,6 +10,10 @@ description = "Rust implementation of StarCraft II API"
 repository = "https://github.com/UltraMachine/rust-sc2"
 readme = "README.md"
 license = "MIT"
+
+[lib]
+name = "sc2"
+path = "src/lib.rs"
 
 [dependencies]
 sc2-proto = { git = "https://github.com/nguyenthdat/sc2-proto-rs" }
@@ -40,6 +44,7 @@ regex = "1.11"
 clap = { version = "4", features = ["derive"] }
 
 [features]
+default = ["protoc", "enemies_cache", "rayon", "serde"]
 protoc = ["sc2-proto/protoc-rust"]
 enemies_cache = []
 wine_sc2 = []
