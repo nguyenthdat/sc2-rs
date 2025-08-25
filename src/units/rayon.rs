@@ -1,6 +1,6 @@
 //! Parallelism for Units collection.
 
-use super::{cmp, cmp_by2, Container, FxIndexMap, Units};
+use super::{Container, FxIndexMap, Units, cmp, cmp_by2};
 use crate::{distance::Distance, geometry::Point2, ids::UnitTypeId, unit::Unit};
 use indexmap::map::rayon::{ParIter, ParIterMut, ParKeys, ParValues, ParValuesMut};
 use rayon::{iter::plumbing::*, prelude::*};
@@ -424,7 +424,7 @@ macro_rules! make_simple_iterator {
 				Self { iter }
 			}
 
-			fn predicate(&self) -> impl Fn(&Unit) -> bool {
+			fn predicate(&self) -> impl Fn(&Unit) -> bool + use<I> {
 				$pred
 			}
 		}
@@ -565,7 +565,7 @@ impl<I> OfType<I> {
 		Self { iter, unit_type }
 	}
 
-	fn predicate(&self) -> impl Fn(&Unit) -> bool {
+	fn predicate(&self) -> impl Fn(&Unit) -> bool + use<I> {
 		let unit_type = self.unit_type;
 		move |u| u.type_id() == unit_type
 	}
@@ -583,7 +583,7 @@ impl<I> ExcludeType<I> {
 		Self { iter, unit_type }
 	}
 
-	fn predicate(&self) -> impl Fn(&Unit) -> bool {
+	fn predicate(&self) -> impl Fn(&Unit) -> bool + use<I> {
 		let unit_type = self.unit_type;
 		move |u| u.type_id() != unit_type
 	}

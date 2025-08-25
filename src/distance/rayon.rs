@@ -1,6 +1,6 @@
 //! Parallelism for iterators over elements implementing [`Distance`](super::Distance).
 
-use super::{cmp, dist_to, Distance};
+use super::{Distance, cmp, dist_to};
 use crate::geometry::Point2;
 use rayon::{iter::plumbing::*, prelude::*, vec::IntoIter as IntoParIter};
 
@@ -110,11 +110,7 @@ where
 			|| (Point2::default(), 0),
 			|(sum1, len1), (sum2, len2)| (sum1 + sum2, len1 + len2),
 		);
-		if len > 0 {
-			Some(sum / len as f32)
-		} else {
-			None
-		}
+		if len > 0 { Some(sum / len as f32) } else { None }
 	}
 }
 
@@ -272,7 +268,7 @@ impl<I> Closer<I> {
 		}
 	}
 
-	fn predicate<T: Distance + Copy>(&self) -> impl Fn(&T) -> bool {
+	fn predicate<T: Distance + Copy>(&self) -> impl Fn(&T) -> bool + use<T, I> {
 		let distance = self.distance;
 		let target = self.target;
 		move |u| u.is_closer(distance, target)
@@ -296,7 +292,7 @@ impl<I> Further<I> {
 		}
 	}
 
-	fn predicate<T: Distance + Copy>(&self) -> impl Fn(&T) -> bool {
+	fn predicate<T: Distance + Copy>(&self) -> impl Fn(&T) -> bool + use<T, I> {
 		let distance = self.distance;
 		let target = self.target;
 		move |u| u.is_further(distance, target)
