@@ -4,11 +4,13 @@
 use std::ops::Deref;
 
 use crate::{
+	FromProto,
 	action::{Commander, Target},
 	bot::{LockBool, LockOwned, LockU32, Locked, Reader, Rl, Rs, Rw},
 	consts::{
-		RaceValues, ANTI_ARMOR_BUFF, DAMAGE_BONUS_PER_UPGRADE, FRAMES_PER_SECOND, MISSED_WEAPONS,
-		OFF_CREEP_SPEED_UPGRADES, SPEED_BUFFS, SPEED_ON_CREEP, SPEED_UPGRADES, WARPGATE_ABILITIES,
+		ANTI_ARMOR_BUFF, DAMAGE_BONUS_PER_UPGRADE, FRAMES_PER_SECOND, MISSED_WEAPONS,
+		OFF_CREEP_SPEED_UPGRADES, RaceValues, SPEED_BUFFS, SPEED_ON_CREEP, SPEED_UPGRADES,
+		WARPGATE_ABILITIES,
 	},
 	distance::Distance,
 	game_data::{Attribute, Cost, GameData, TargetType, UnitTypeData, Weapon},
@@ -19,15 +21,14 @@ use crate::{
 	player::Race,
 	units::Container,
 	utils::CacheMap,
-	FromProto,
 };
 use lazy_init::Lazy as LazyInit;
 use num_traits::FromPrimitive;
 use once_cell::sync::Lazy;
 use rustc_hash::{FxHashMap, FxHashSet};
 use sc2_proto::raw::{
-	unit_order::Target as ProtoTarget, CloakState as ProtoCloakState, DisplayType as ProtoDisplayType,
-	Unit as ProtoUnit,
+	CloakState as ProtoCloakState, DisplayType as ProtoDisplayType, Unit as ProtoUnit,
+	unit_order::Target as ProtoTarget,
 };
 
 #[derive(Default, Clone)]
@@ -728,26 +729,25 @@ impl Unit {
 
 			// ---- Upgrades ----
 			let upgrades = self.upgrades();
-			if let Some((upgrade_id, increase)) = SPEED_UPGRADES.get(&unit_type) {
-				if upgrades.contains(upgrade_id) {
-					speed *= increase;
-				}
+			if let Some((upgrade_id, increase)) = SPEED_UPGRADES.get(&unit_type)
+				&& upgrades.contains(upgrade_id)
+			{
+				speed *= increase;
 			}
 
 			// ---- Creep ----
 			// On creep
-			if self.data.creep.read_lock()[self.position()].is_set() {
-				if let Some(increase) = SPEED_ON_CREEP.get(&unit_type) {
-					speed *= increase;
-				}
+			if self.data.creep.read_lock()[self.position()].is_set()
+				&& let Some(increase) = SPEED_ON_CREEP.get(&unit_type)
+			{
+				speed *= increase;
 			}
 			// Off creep upgrades
-			if !upgrades.is_empty() {
-				if let Some((upgrade_id, increase)) = OFF_CREEP_SPEED_UPGRADES.get(&unit_type) {
-					if upgrades.contains(upgrade_id) {
-						speed *= increase;
-					}
-				}
+			if !upgrades.is_empty()
+				&& let Some((upgrade_id, increase)) = OFF_CREEP_SPEED_UPGRADES.get(&unit_type)
+				&& upgrades.contains(upgrade_id)
+			{
+				speed *= increase;
 			}
 
 			speed
@@ -1374,23 +1374,23 @@ impl Unit {
 							.copied()
 							.unwrap_or(0);
 
-						if let Attribute::Light = attribute {
-							if upgrades.contains(&UpgradeId::HighCapacityBarrels) {
-								match self.type_id() {
-									UnitTypeId::Hellion => damage_bonus_per_upgrade += 5,
-									UnitTypeId::HellionTank => damage_bonus_per_upgrade += 12,
-									_ => {}
-								}
+						if let Attribute::Light = attribute
+							&& upgrades.contains(&UpgradeId::HighCapacityBarrels)
+						{
+							match self.type_id() {
+								UnitTypeId::Hellion => damage_bonus_per_upgrade += 5,
+								UnitTypeId::HellionTank => damage_bonus_per_upgrade += 12,
+								_ => {}
 							}
 						}
 
 						let mut bonus_damage =
 							bonus + (self.attack_upgrade_level() * damage_bonus_per_upgrade);
 
-						if let Attribute::Armored = attribute {
-							if self.has_buff(BuffId::VoidRaySwarmDamageBoost) {
-								bonus_damage += 6;
-							}
+						if let Attribute::Armored = attribute
+							&& self.has_buff(BuffId::VoidRaySwarmDamageBoost)
+						{
+							bonus_damage += 6;
 						}
 
 						Some(bonus_damage)
@@ -1532,11 +1532,11 @@ impl Unit {
 	where
 		A: Into<Point2> + Radius,
 	{
-		if let Some(data) = self.data.game_data.abilities.get(&ability_id) {
-			if let Some(cast_range) = data.cast_range {
-				return (cast_range + self.radius() + target.radius() + gap).powi(2)
-					>= self.distance_squared(target);
-			}
+		if let Some(data) = self.data.game_data.abilities.get(&ability_id)
+			&& let Some(cast_range) = data.cast_range
+		{
+			return (cast_range + self.radius() + target.radius() + gap).powi(2)
+				>= self.distance_squared(target);
 		}
 		false
 	}
@@ -1856,20 +1856,20 @@ impl Unit {
 	}
 	/// Orders worker to build something on given position.
 	pub fn build(&self, unit: UnitTypeId, target: Point2, queue: bool) {
-		if let Some(type_data) = self.data.game_data.units.get(&unit) {
-			if let Some(ability) = type_data.ability {
-				self.command(ability, Target::Pos(target), queue);
-			}
+		if let Some(type_data) = self.data.game_data.units.get(&unit)
+			&& let Some(ability) = type_data.ability
+		{
+			self.command(ability, Target::Pos(target), queue);
 		}
 	}
 	/// Orders production building to train given unit.
 	///
 	/// This also works for morphing units and building addons.
 	pub fn train(&self, unit: UnitTypeId, queue: bool) {
-		if let Some(type_data) = self.data.game_data.units.get(&unit) {
-			if let Some(ability) = type_data.ability {
-				self.command(ability, Target::None, queue);
-			}
+		if let Some(type_data) = self.data.game_data.units.get(&unit)
+			&& let Some(ability) = type_data.ability
+		{
+			self.command(ability, Target::None, queue);
 		}
 	}
 	/// Orders building to research given upgrade.

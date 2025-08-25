@@ -3,7 +3,7 @@
 use std::ops::Deref;
 
 use crate::{FromProto, IntoSC2};
-use sc2_proto::score::{score, CategoryScoreDetails, Score as ProtoScore, VitalScoreDetails};
+use sc2_proto::score::{CategoryScoreDetails, Score as ProtoScore, VitalScoreDetails, score};
 
 #[variant_checkers]
 #[derive(Clone, Default)]

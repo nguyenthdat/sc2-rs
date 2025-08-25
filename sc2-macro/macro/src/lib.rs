@@ -4,7 +4,7 @@ extern crate quote;
 use proc_macro::TokenStream;
 use regex::Regex;
 use syn::{
-	parse_macro_input, Attribute, Data, DeriveInput, Fields, ItemEnum, ItemFn, ItemStruct, Meta, NestedMeta,
+	Attribute, Data, DeriveInput, Fields, ItemEnum, ItemFn, ItemStruct, Meta, NestedMeta, parse_macro_input,
 };
 
 #[proc_macro_attribute]

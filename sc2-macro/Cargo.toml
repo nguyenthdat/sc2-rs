@@ -1,12 +1,11 @@
 [package]
 name = "sc2-macro"
 version = "1.0.0"
-authors = ["Armageddon <lunyx1337@gmail.com>"]
-edition = "2024"
 description = "Procedural macros for rust-sc2 API"
-repository = "https://github.com/UltraMachine/rust-sc2"
-readme = "../README.md"
-license-file = "../LICENSE"
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+readme.workspace = true
 
 [dependencies]
 sc2-proc-macro = { path = "macro", version = "1" }

@@ -2,18 +2,18 @@
 #![allow(missing_docs)]
 
 use crate::{
+	FromProto, TryFromProto,
 	ids::{AbilityId, BuffId, EffectId, UnitTypeId, UpgradeId},
 	player::Race,
-	FromProto, TryFromProto,
 };
 use num_traits::FromPrimitive;
 use rustc_hash::FxHashMap;
 use sc2_proto::{
 	data::{
-		ability_data::Target as AbilityData_Target, weapon::TargetType as Weapon_TargetType,
 		AbilityData as ProtoAbilityData, Attribute as ProtoAttribute, BuffData as ProtoBuffData,
 		EffectData as ProtoEffectData, UnitTypeData as ProtoUnitTypeData, UpgradeData as ProtoUpgradeData,
-		Weapon as ProtoWeapon,
+		Weapon as ProtoWeapon, ability_data::Target as AbilityData_Target,
+		weapon::TargetType as Weapon_TargetType,
 	},
 	sc2api::ResponseData,
 };

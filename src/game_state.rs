@@ -1,6 +1,7 @@
 //! Information updated every step stored here.
 
 use crate::{
+	Event, FromProto, Player, SC2Result,
 	action::{Action, ActionError},
 	bot::{Bot, LockOwned, LockU32, Locked, Rs, Rw},
 	geometry::Point2,
@@ -9,7 +10,6 @@ use crate::{
 	score::Score,
 	unit::Unit,
 	units::Units,
-	Event, FromProto, Player, SC2Result,
 };
 use num_traits::FromPrimitive;
 use rustc_hash::FxHashSet;
@@ -270,18 +270,17 @@ where
 		bot.under_construction.remove(&tag);
 	}
 
-	if bot.enemy_race.is_random() {
-		if let Some(race) = bot
+	if bot.enemy_race.is_random()
+		&& let Some(race) = bot
 			.units
 			.enemy
 			.all
 			.iter()
 			.map(|u| u.race())
 			.find(|r| !r.is_random())
-		{
-			events.push(Event::RandomRaceDetected(race));
-			bot.enemy_race = race;
-		}
+	{
+		events.push(Event::RandomRaceDetected(race));
+		bot.enemy_race = race;
 	}
 
 	Ok(events)

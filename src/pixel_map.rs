@@ -1,7 +1,7 @@
 //! Data structures, used to store map data.
 #![allow(missing_docs)]
 
-use crate::{geometry::Point2, FromProto};
+use crate::{FromProto, geometry::Point2};
 use ndarray::Array2;
 use num_traits::FromPrimitive;
 use sc2_proto::common::ImageData;

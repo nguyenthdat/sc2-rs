@@ -1,15 +1,25 @@
 [package]
 name = "sc2"
 version = "1.2.1"
+description = "Rust implementation of StarCraft II API"
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+readme.workspace = true
+
+[workspace]
+resolver = "3"
+members = ["sc2-macro", "sc2-macro/macro"]
+
+[workspace.package]
+edition = "2024"
+repository = "https://github.com/nguyenthdat/sc2-rs"
+readme = "README.md"
+license = "MIT"
 authors = [
     "Armageddon <lunyx1337@gmail.com>",
     "Dat Nguyen <nguyenthdat@outlook.com>",
 ]
-edition = "2024"
-description = "Rust implementation of StarCraft II API"
-repository = "https://github.com/UltraMachine/rust-sc2"
-readme = "README.md"
-license = "MIT"
 
 [lib]
 name = "sc2"

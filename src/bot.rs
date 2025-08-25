@@ -1,10 +1,11 @@
 //! [`Bot`] struct and it's helpers.
 
 use crate::{
+	FromProto, IntoProto,
 	action::{Action, ActionResult, Commander, Target},
 	api::API,
 	client::SC2Result,
-	consts::{RaceValues, FRAMES_PER_SECOND, INHIBITOR_IDS, RACE_VALUES, TECH_ALIAS, UNIT_ALIAS},
+	consts::{FRAMES_PER_SECOND, INHIBITOR_IDS, RACE_VALUES, RaceValues, TECH_ALIAS, UNIT_ALIAS},
 	debug::{DebugCommand, Debugger},
 	distance::*,
 	game_data::{Cost, GameData},
@@ -18,7 +19,6 @@ use crate::{
 	unit::{DataForUnit, SharedUnitData, Unit},
 	units::{AllUnits, Units},
 	utils::{dbscan, range_query},
-	FromProto, IntoProto,
 };
 use indexmap::IndexSet;
 use num_traits::ToPrimitive;
@@ -42,8 +42,8 @@ use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 #[cfg(feature = "rayon")]
 use std::sync::{
-	atomic::{AtomicBool, AtomicU32, Ordering},
 	Arc,
+	atomic::{AtomicBool, AtomicU32, Ordering},
 };
 
 #[cfg(not(feature = "rayon"))]
@@ -1084,20 +1084,20 @@ impl Bot {
 			.for_each(|u| {
 				for order in u.orders() {
 					let ability = order.ability;
-					if ability.is_constructing() {
-						if let Target::Pos(pos) = order.target {
-							constructed.insert((pos, ability), false);
-						};
-					}
+					if ability.is_constructing()
+						&& let Target::Pos(pos) = order.target
+					{
+						constructed.insert((pos, ability), false);
+					};
 					*orders.entry(ability).or_default() += 1;
 				}
 
 				if u.is_ready() {
 					*current_units.entry(u.type_id()).or_default() += 1;
-				} else if let Some(data) = self.game_data.units.get(&u.type_id()) {
-					if let Some(ability) = data.ability {
-						constructed.entry((u.position(), ability)).or_insert(true);
-					}
+				} else if let Some(data) = self.game_data.units.get(&u.type_id())
+					&& let Some(ability) = data.ability
+				{
+					constructed.entry((u.position(), ability)).or_insert(true);
 				}
 			});
 		for ((_, ability), standalone) in constructed {
@@ -1428,15 +1428,15 @@ impl Bot {
 			}
 
 			for u in burrowed {
-				if let Some(u) = cache.all.get(u) {
-					if let Some(burrowed_id) = BURROWED_IDS.get(&u.type_id()) {
-						let u = &u.base;
-						*u.display_type.write_lock() = DisplayType::Hidden;
-						*u.type_id.write_lock() = *burrowed_id;
-						u.is_burrowed.set_locked(true);
-						u.is_cloaked.set_locked(true);
-						u.is_revealed.set_locked(false);
-					}
+				if let Some(u) = cache.all.get(u)
+					&& let Some(burrowed_id) = BURROWED_IDS.get(&u.type_id())
+				{
+					let u = &u.base;
+					*u.display_type.write_lock() = DisplayType::Hidden;
+					*u.type_id.write_lock() = *burrowed_id;
+					u.is_burrowed.set_locked(true);
+					u.is_cloaked.set_locked(true);
+					u.is_revealed.set_locked(false);
 				}
 			}
 
@@ -1535,84 +1535,82 @@ impl Bot {
 		near: Point2,
 		options: PlacementOptions,
 	) -> Option<Point2> {
-		if let Some(data) = self.game_data.units.get(&building) {
-			if let Some(ability) = data.ability {
-				let addon = options.addon;
-				if self
-					.query_placement(
-						if addon {
-							vec![
-								(ability, near, None),
-								(AbilityId::TerranBuildSupplyDepot, near.offset(2.5, -0.5), None),
-							]
-						} else {
-							vec![(ability, near, None)]
-						},
-						false,
-					)
-					.unwrap()
+		if let Some(data) = self.game_data.units.get(&building)
+			&& let Some(ability) = data.ability
+		{
+			let addon = options.addon;
+			if self
+				.query_placement(
+					if addon {
+						vec![
+							(ability, near, None),
+							(AbilityId::TerranBuildSupplyDepot, near.offset(2.5, -0.5), None),
+						]
+					} else {
+						vec![(ability, near, None)]
+					},
+					false,
+				)
+				.unwrap()
+				.iter()
+				.all(|r| matches!(r, ActionResult::Success))
+			{
+				return Some(near);
+			}
+
+			let placement_step = options.step;
+			for distance in (placement_step..options.max_distance).step_by(placement_step as usize) {
+				let positions = (-distance..=distance)
+					.step_by(placement_step as usize)
+					.flat_map(|offset| {
+						vec![
+							near.offset(offset as f32, (-distance) as f32),
+							near.offset(offset as f32, distance as f32),
+							near.offset((-distance) as f32, offset as f32),
+							near.offset(distance as f32, offset as f32),
+						]
+					})
+					.collect::<Vec<Point2>>();
+				let results = self
+					.query_placement(positions.iter().map(|pos| (ability, *pos, None)).collect(), false)
+					.unwrap();
+
+				let mut valid_positions = positions
 					.iter()
-					.all(|r| matches!(r, ActionResult::Success))
-				{
-					return Some(near);
+					.zip(results.iter())
+					.filter_map(|(pos, res)| {
+						if matches!(res, ActionResult::Success) {
+							Some(*pos)
+						} else {
+							None
+						}
+					})
+					.collect::<Vec<Point2>>();
+
+				if addon {
+					let results = self
+						.query_placement(
+							valid_positions
+								.iter()
+								.map(|pos| (AbilityId::TerranBuildSupplyDepot, pos.offset(2.5, -0.5), None))
+								.collect(),
+							false,
+						)
+						.unwrap();
+					valid_positions = valid_positions
+						.into_iter()
+						.zip(results.into_iter())
+						.filter(|(_, res)| *res == ActionResult::Success)
+						.map(|(pos, _)| pos)
+						.collect::<Vec<Point2>>();
 				}
 
-				let placement_step = options.step;
-				for distance in (placement_step..options.max_distance).step_by(placement_step as usize) {
-					let positions = (-distance..=distance)
-						.step_by(placement_step as usize)
-						.flat_map(|offset| {
-							vec![
-								near.offset(offset as f32, (-distance) as f32),
-								near.offset(offset as f32, distance as f32),
-								near.offset((-distance) as f32, offset as f32),
-								near.offset(distance as f32, offset as f32),
-							]
-						})
-						.collect::<Vec<Point2>>();
-					let results = self
-						.query_placement(positions.iter().map(|pos| (ability, *pos, None)).collect(), false)
-						.unwrap();
-
-					let mut valid_positions = positions
-						.iter()
-						.zip(results.iter())
-						.filter_map(|(pos, res)| {
-							if matches!(res, ActionResult::Success) {
-								Some(*pos)
-							} else {
-								None
-							}
-						})
-						.collect::<Vec<Point2>>();
-
-					if addon {
-						let results = self
-							.query_placement(
-								valid_positions
-									.iter()
-									.map(|pos| {
-										(AbilityId::TerranBuildSupplyDepot, pos.offset(2.5, -0.5), None)
-									})
-									.collect(),
-								false,
-							)
-							.unwrap();
-						valid_positions = valid_positions
-							.into_iter()
-							.zip(results.into_iter())
-							.filter(|(_, res)| *res == ActionResult::Success)
-							.map(|(pos, _)| pos)
-							.collect::<Vec<Point2>>();
-					}
-
-					if !valid_positions.is_empty() {
-						return if options.random {
-							valid_positions.choose(&mut rand::rng()).copied()
-						} else {
-							valid_positions.iter().closest(near).copied()
-						};
-					}
+				if !valid_positions.is_empty() {
+					return if options.random {
+						valid_positions.choose(&mut rand::rng()).copied()
+					} else {
+						valid_positions.iter().closest(near).copied()
+					};
 				}
 			}
 		}
@@ -1770,10 +1768,10 @@ impl Bot {
 			}
 		}
 
-		if let Some(process) = &mut self.process {
-			if let Err(e) = process.kill() {
-				error!("Can't kill SC2 process: {}", e);
-			}
+		if let Some(process) = &mut self.process
+			&& let Err(e) = process.kill()
+		{
+			error!("Can't kill SC2 process: {}", e);
 		}
 	}
 }

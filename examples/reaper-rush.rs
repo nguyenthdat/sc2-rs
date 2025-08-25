@@ -152,11 +152,7 @@ impl ReaperRushAI {
 		// Distributing idle workers
 		let minerals_near_base = if idle_workers.len() > deficit_minings.len() + deficit_geysers.len() {
 			let minerals = mineral_fields.filter(|m| bases.iter().any(|base| base.is_closer(11.0, *m)));
-			if minerals.is_empty() {
-				None
-			} else {
-				Some(minerals)
-			}
+			if minerals.is_empty() { None } else { Some(minerals) }
 		} else {
 			None
 		};

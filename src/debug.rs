@@ -1,17 +1,17 @@
 //! Items for interacting with Debug API.
 
 use crate::{
+	IntoProto,
 	geometry::{Point2, Point3},
 	ids::UnitTypeId,
-	IntoProto,
 };
 use num_traits::ToPrimitive;
 use rustc_hash::FxHashSet;
 use sc2_proto::debug::{
+	DebugBox, DebugCommand as ProtoDebugCommand, DebugDraw as ProtoDebugDraw,
+	DebugGameState as ProtoDebugGameState, DebugLine, DebugSphere, DebugText,
 	debug_end_game::EndResult as DebugEndGame_EndResult,
-	debug_set_unit_value::UnitValue as DebugSetUnitValue_UnitValue, DebugBox,
-	DebugCommand as ProtoDebugCommand, DebugDraw as ProtoDebugDraw, DebugGameState as ProtoDebugGameState,
-	DebugLine, DebugSphere, DebugText,
+	debug_set_unit_value::UnitValue as DebugSetUnitValue_UnitValue,
 };
 
 type Color = (u32, u32, u32);

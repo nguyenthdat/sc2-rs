@@ -4,12 +4,12 @@
 //! and simple runner functions for playing once.
 
 use crate::{
+	IntoProto, IntoSC2, Player, PlayerSettings,
 	api::API,
 	bot::{Bot, LockOwned, Rs},
 	game_state::update_state,
 	paths::*,
 	player::Computer,
-	IntoProto, IntoSC2, Player, PlayerSettings,
 };
 use sc2_proto::sc2api::{PlayerSetup, PlayerType, PortSet, Request, RequestCreateGame, Status};
 use std::{
@@ -21,7 +21,7 @@ use std::{
 	ops::{Deref, DerefMut},
 	process::{Child, Command},
 };
-use tungstenite::{client::connect, stream::MaybeTlsStream, WebSocket};
+use tungstenite::{WebSocket, client::connect, stream::MaybeTlsStream};
 
 pub(crate) type WS = WebSocket<MaybeTlsStream<TcpStream>>;
 pub type SC2Result<T> = Result<T, Box<dyn Error>>;
@@ -347,10 +347,10 @@ impl Human {
 			}
 		}
 
-		if let Some(process) = &mut self.process {
-			if let Err(e) = process.kill() {
-				error!("Can't kill SC2 process: {}", e);
-			}
+		if let Some(process) = &mut self.process
+			&& let Err(e) = process.kill()
+		{
+			error!("Can't kill SC2 process: {}", e);
 		}
 	}
 }

@@ -3,8 +3,8 @@
 
 use crate::{geometry::Point2, ids::UnitTypeId, unit::Unit};
 use indexmap::{
-	map::{Iter, IterMut, Keys, Values, ValuesMut},
 	IndexMap, IndexSet,
+	map::{Iter, IterMut, Keys, Values, ValuesMut},
 };
 use iter::IntoUnits;
 use rustc_hash::FxHasher;

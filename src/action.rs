@@ -1,9 +1,9 @@
 //! Data structures for executing actions and analyzing actions failure.
 
 use crate::{
+	FromProto, IntoProto,
 	geometry::{Point2, Point3},
 	ids::AbilityId,
-	FromProto, IntoProto,
 };
 use num_traits::{FromPrimitive, ToPrimitive};
 use rustc_hash::FxHashMap;
@@ -11,7 +11,7 @@ use sc2_proto::{
 	error::ActionResult as ProtoActionResult,
 	raw::{action_raw::Action as ProtoRawAction, action_raw_unit_command::Target as ProtoTarget},
 	sc2api::{
-		action_chat::Channel as ActionChatChannel, Action as ProtoAction, ActionError as ProtoActionError,
+		Action as ProtoAction, ActionError as ProtoActionError, action_chat::Channel as ActionChatChannel,
 	},
 };
 
