@@ -11,6 +11,6 @@ readme.workspace = true
 proc-macro = true
 
 [dependencies]
-syn = { version = "^2.0", features = ["full", "parsing"] }
-quote = "^1.0"
-regex = "^1"
+syn = { version = "2.0", features = ["full"] }
+quote = "1.0"
+regex = "1"

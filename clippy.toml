@@ -1,0 +1,2 @@
+cognitive-complexity-threshold = 10
+allow-expect-in-tests = true

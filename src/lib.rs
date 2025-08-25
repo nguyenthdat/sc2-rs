@@ -344,11 +344,12 @@ pub mod prelude {
 	#[cfg(feature = "rayon")]
 	pub use crate::units::rayon::ParUnitsIterator;
 	pub use crate::{
+		Event, Player, PlayerSettings,
 		action::Target,
 		bot::PlacementOptions,
 		client::{
-			run_ladder_game, run_vs_computer, run_vs_human, LaunchOptions, RunnerMulti, RunnerSingle,
-			SC2Result,
+			LaunchOptions, RunnerMulti, RunnerSingle, SC2Result, run_ladder_game, run_vs_computer,
+			run_vs_human,
 		},
 		consts::{ALL_PRODUCERS, PRODUCERS, RESEARCHERS, TECH_REQUIREMENTS},
 		distance::{Center, Distance, DistanceIterator, DistanceSlice},
@@ -357,8 +358,7 @@ pub mod prelude {
 		ids::*,
 		player::{AIBuild, Computer, Difficulty, GameResult, Race},
 		unit::Unit,
-		units::{iter::UnitsIterator, Units},
-		Event, Player, PlayerSettings,
+		units::{Units, iter::UnitsIterator},
 	};
 	#[doc(no_inline)]
 	pub use sc2_macro::{bot, bot_new};
