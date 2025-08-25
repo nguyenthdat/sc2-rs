@@ -28,24 +28,24 @@ where
 		if solved.contains(p) {
 			continue;
 		}
-		solved.insert(p.clone());
+		solved.insert(p.to_owned());
 
 		let neighbors = range_query(p);
 		if neighbors.len() < min_points {
-			noise.insert(p.clone());
+			noise.insert(p.to_owned());
 		} else {
 			match clusters.get_mut(c) {
-				Some(cluster) => cluster.push(p.clone()),
-				None => clusters.push(vec![p.clone()]),
+				Some(cluster) => cluster.push(p.to_owned()),
+				None => clusters.push(vec![p.to_owned()]),
 			}
 
 			let mut seed_set = neighbors;
 			while let Some(q) = seed_set.pop() {
 				if noise.remove(&q) {
-					clusters[c].push(q.clone());
+					clusters[c].push(q.to_owned());
 				} else if !solved.contains(&q) {
-					clusters[c].push(q.clone());
-					solved.insert(q.clone());
+					clusters[c].push(q.to_owned());
+					solved.insert(q.to_owned());
 					let neighbors = range_query(&q);
 					if neighbors.len() >= min_points {
 						seed_set.extend(neighbors);
@@ -76,7 +76,7 @@ where
 	F: Fn(&P, &P) -> D,
 {
 	move |q: &P| {
-		data.clone()
+		data.to_owned()
 			.into_iter()
 			.filter(|p| distance(q, p) <= epsilon)
 			.cloned()

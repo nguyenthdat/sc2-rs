@@ -64,7 +64,7 @@ impl IntoProto<ProtoAction> for &Action {
 					Target::Tag(tag) => unit_command.set_target_unit_tag(*tag),
 					Target::None => {}
 				}
-				unit_command.unit_tags = units.clone();
+				unit_command.unit_tags = units.to_owned();
 				unit_command.set_queue_command(*queue);
 			}
 			Action::CameraMove(pos) => {
@@ -77,7 +77,7 @@ impl IntoProto<ProtoAction> for &Action {
 			Action::ToggleAutocast(ability, units) => {
 				let toggle_autocast = action.action_raw.mut_or_insert_default().mut_toggle_autocast();
 				toggle_autocast.set_ability_id(ability.to_i32().unwrap());
-				toggle_autocast.unit_tags = units.clone();
+				toggle_autocast.unit_tags = units.to_owned();
 			}
 		}
 		action
@@ -99,7 +99,7 @@ impl FromProto<&ProtoAction> for Option<Action> {
 					Some(Action::UnitCommand(
 						ability,
 						target,
-						unit_command.unit_tags.clone(),
+						unit_command.unit_tags.to_owned(),
 						unit_command.queue_command(),
 					))
 				}
@@ -108,7 +108,10 @@ impl FromProto<&ProtoAction> for Option<Action> {
 				)),
 				Some(ProtoRawAction::ToggleAutocast(toggle_autocast)) => {
 					let ability = AbilityId::from_i32(toggle_autocast.ability_id())?;
-					Some(Action::ToggleAutocast(ability, toggle_autocast.unit_tags.clone()))
+					Some(Action::ToggleAutocast(
+						ability,
+						toggle_autocast.unit_tags.to_owned(),
+					))
 				}
 				_ => None,
 			}

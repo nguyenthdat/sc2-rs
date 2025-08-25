@@ -814,7 +814,7 @@ impl Bot {
 			self.enemy_race = self.game_info.players[&enemy_player_id].race_requested;
 			self.enemy_player_id = enemy_player_id;
 		}
-		self.race_values = Rs::new(RACE_VALUES[&self.race].clone());
+		self.race_values = Rs::new(RACE_VALUES[&self.race].to_owned());
 
 		self.data_for_unit = Rs::new(DataForUnit {
 			commander: Rs::clone(&self.commander),
@@ -1328,18 +1328,18 @@ impl Bot {
 			let cache = &mut self.units.cached;
 			let enemy_is_terran = self.enemy_race.is_terran();
 
-			cache.all.extend(enemies.all.clone());
-			cache.units.extend(enemies.units.clone());
-			cache.workers.extend(enemies.workers.clone());
+			cache.all.extend(enemies.all.to_owned());
+			cache.units.extend(enemies.units.to_owned());
+			cache.workers.extend(enemies.workers.to_owned());
 			if enemy_is_terran {
-				cache.structures.extend(enemies.structures.clone());
-				cache.townhalls.extend(enemies.townhalls.clone());
+				cache.structures.extend(enemies.structures.to_owned());
+				cache.townhalls.extend(enemies.townhalls.to_owned());
 			} else {
-				cache.structures = enemies.structures.clone();
-				cache.townhalls = enemies.townhalls.clone();
+				cache.structures = enemies.structures.to_owned();
+				cache.townhalls = enemies.townhalls.to_owned();
 			}
-			cache.gas_buildings = enemies.gas_buildings.clone();
-			cache.larvas = enemies.larvas.clone();
+			cache.gas_buildings = enemies.gas_buildings.to_owned();
+			cache.larvas = enemies.larvas.to_owned();
 
 			let mut to_remove = Vec::<u64>::new();
 			let mut burrowed = Vec::<u64>::new();
@@ -1465,7 +1465,7 @@ impl Bot {
 		.iter()
 		.for_each(|u| {
 			if u.is_detector() {
-				enemy_detectors.push(u.clone());
+				enemy_detectors.push(u.to_owned());
 			}
 
 			if u.is_structure() {
