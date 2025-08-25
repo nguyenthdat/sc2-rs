@@ -6,7 +6,7 @@ HEAD = """\
 #![allow(deprecated)]
 
 #[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 """
 DERIVES = """\
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
