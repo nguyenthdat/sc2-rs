@@ -7,13 +7,12 @@ use crate::{
 	player::Race,
 };
 use num_traits::FromPrimitive;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxBuildHasher, FxHashMap};
 use sc2_proto::{
 	data::{
 		AbilityData as ProtoAbilityData, Attribute as ProtoAttribute, BuffData as ProtoBuffData,
 		EffectData as ProtoEffectData, UnitTypeData as ProtoUnitTypeData, UpgradeData as ProtoUpgradeData,
-		Weapon as ProtoWeapon, ability_data::Target as AbilityData_Target,
-		weapon::TargetType as Weapon_TargetType,
+		Weapon as ProtoWeapon, ability_data, weapon,
 	},
 	sc2api::ResponseData,
 };
@@ -37,33 +36,55 @@ pub struct GameData {
 	pub effects: FxHashMap<EffectId, EffectData>,
 }
 impl FromProto<ResponseData> for GameData {
+	#[inline]
 	fn from_proto(data: ResponseData) -> Self {
+		// Move out of ResponseData to avoid cloning
+		let abilities_vec = data.abilities;
+		let units_vec = data.units;
+		let upgrades_vec = data.upgrades;
+		let buffs_vec = data.buffs;
+		let effects_vec = data.effects;
+
+		let hasher = FxBuildHasher::default();
+
+		let mut abilities = FxHashMap::with_capacity_and_hasher(abilities_vec.len(), hasher);
+		let mut units = FxHashMap::with_capacity_and_hasher(units_vec.len(), hasher);
+		let mut upgrades = FxHashMap::with_capacity_and_hasher(upgrades_vec.len(), hasher);
+		let mut buffs = FxHashMap::with_capacity_and_hasher(buffs_vec.len(), hasher);
+		let mut effects = FxHashMap::with_capacity_and_hasher(effects_vec.len(), hasher);
+
+		for a in abilities_vec.into_iter() {
+			if let Some(data) = AbilityData::try_from_proto(a) {
+				abilities.insert(data.id, data);
+			}
+		}
+		for u in units_vec.into_iter() {
+			if let Some(data) = UnitTypeData::try_from_proto(u) {
+				units.insert(data.id, data);
+			}
+		}
+		for up in upgrades_vec.into_iter() {
+			if let Some(data) = UpgradeData::try_from_proto(up) {
+				upgrades.insert(data.id, data);
+			}
+		}
+		for b in buffs_vec.into_iter() {
+			if let Some(data) = BuffData::try_from_proto(b) {
+				buffs.insert(data.id, data);
+			}
+		}
+		for e in effects_vec.into_iter() {
+			if let Some(data) = EffectData::try_from_proto(e) {
+				effects.insert(data.id, data);
+			}
+		}
+
 		Self {
-			abilities: data
-				.abilities
-				.iter()
-				.filter_map(|a| AbilityData::try_from_proto(a).map(|data| (data.id, data)))
-				.collect(),
-			units: data
-				.units
-				.iter()
-				.filter_map(|u| UnitTypeData::try_from_proto(u).map(|data| (data.id, data)))
-				.collect(),
-			upgrades: data
-				.upgrades
-				.iter()
-				.filter_map(|u| UpgradeData::try_from_proto(u).map(|data| (data.id, data)))
-				.collect(),
-			buffs: data
-				.buffs
-				.iter()
-				.filter_map(|b| BuffData::try_from_proto(b).map(|data| (data.id, data)))
-				.collect(),
-			effects: data
-				.effects
-				.iter()
-				.filter_map(|e| EffectData::try_from_proto(e).map(|data| (data.id, data)))
-				.collect(),
+			abilities,
+			units,
+			upgrades,
+			buffs,
+			effects,
 		}
 	}
 }
@@ -88,14 +109,15 @@ pub enum AbilityTarget {
 	PointOrUnit,
 	PointOrNone,
 }
-impl FromProto<AbilityData_Target> for AbilityTarget {
-	fn from_proto(target: AbilityData_Target) -> Self {
+impl FromProto<ability_data::Target> for AbilityTarget {
+	#[inline]
+	fn from_proto(target: ability_data::Target) -> Self {
 		match target {
-			AbilityData_Target::None => AbilityTarget::None,
-			AbilityData_Target::Point => AbilityTarget::Point,
-			AbilityData_Target::Unit => AbilityTarget::Unit,
-			AbilityData_Target::PointOrUnit => AbilityTarget::PointOrUnit,
-			AbilityData_Target::PointOrNone => AbilityTarget::PointOrNone,
+			ability_data::Target::None => AbilityTarget::None,
+			ability_data::Target::Point => AbilityTarget::Point,
+			ability_data::Target::Unit => AbilityTarget::Unit,
+			ability_data::Target::PointOrUnit => AbilityTarget::PointOrUnit,
+			ability_data::Target::PointOrNone => AbilityTarget::PointOrNone,
 		}
 	}
 }
@@ -118,6 +140,7 @@ pub enum Attribute {
 	Summoned,
 }
 impl FromProto<ProtoAttribute> for Attribute {
+	#[inline]
 	fn from_proto(attribute: ProtoAttribute) -> Self {
 		match attribute {
 			ProtoAttribute::Light => Attribute::Light,
@@ -144,12 +167,13 @@ pub enum TargetType {
 	Air,
 	Any,
 }
-impl FromProto<Weapon_TargetType> for TargetType {
-	fn from_proto(target_type: Weapon_TargetType) -> Self {
+impl FromProto<weapon::TargetType> for TargetType {
+	#[inline]
+	fn from_proto(target_type: weapon::TargetType) -> Self {
 		match target_type {
-			Weapon_TargetType::Ground => TargetType::Ground,
-			Weapon_TargetType::Air => TargetType::Air,
-			Weapon_TargetType::Any => TargetType::Any,
+			weapon::TargetType::Ground => TargetType::Ground,
+			weapon::TargetType::Air => TargetType::Air,
+			weapon::TargetType::Any => TargetType::Any,
 		}
 	}
 }
@@ -172,6 +196,7 @@ pub struct Weapon {
 	pub speed: f32,
 }
 impl FromProto<&ProtoWeapon> for Weapon {
+	#[inline]
 	fn from_proto(weapon: &ProtoWeapon) -> Self {
 		Self {
 			target: TargetType::from_proto(weapon.type_()),
@@ -215,15 +240,16 @@ pub struct AbilityData {
 	/// Maximum range to target of the ability.
 	pub cast_range: Option<f32>,
 }
-impl TryFromProto<&ProtoAbilityData> for AbilityData {
-	fn try_from_proto(a: &ProtoAbilityData) -> Option<Self> {
+impl TryFromProto<ProtoAbilityData> for AbilityData {
+	#[inline]
+	fn try_from_proto(mut a: ProtoAbilityData) -> Option<Self> {
 		Some(Self {
 			id: AbilityId::from_u32(a.ability_id())?,
-			link_name: a.link_name().to_string(),
+			link_name: a.take_link_name(),
 			link_index: a.link_index(),
-			button_name: a.button_name.as_ref().cloned(),
-			friendly_name: a.friendly_name.as_ref().cloned(),
-			hotkey: a.hotkey.as_ref().cloned(),
+			button_name: a.button_name.take(),
+			friendly_name: a.friendly_name.take(),
+			hotkey: a.hotkey.take(),
 			remaps_to_ability_id: a.remaps_to_ability_id.and_then(AbilityId::from_u32),
 			available: a.available(),
 			target: AbilityTarget::from_proto(a.target()),
@@ -280,8 +306,9 @@ impl UnitTypeData {
 		}
 	}
 }
-impl TryFromProto<&ProtoUnitTypeData> for UnitTypeData {
-	fn try_from_proto(u: &ProtoUnitTypeData) -> Option<Self> {
+impl TryFromProto<ProtoUnitTypeData> for UnitTypeData {
+	#[inline]
+	fn try_from_proto(u: ProtoUnitTypeData) -> Option<Self> {
 		Some(Self {
 			id: UnitTypeId::from_u32(u.unit_id())?,
 			name: u.name().to_string(),
@@ -339,8 +366,9 @@ impl UpgradeData {
 		}
 	}
 }
-impl TryFromProto<&ProtoUpgradeData> for UpgradeData {
-	fn try_from_proto(u: &ProtoUpgradeData) -> Option<Self> {
+impl TryFromProto<ProtoUpgradeData> for UpgradeData {
+	#[inline]
+	fn try_from_proto(u: ProtoUpgradeData) -> Option<Self> {
 		Some(Self {
 			id: UpgradeId::from_u32(u.upgrade_id())?,
 			ability: AbilityId::from_u32(u.ability_id())?,
@@ -359,8 +387,9 @@ pub struct BuffData {
 	pub id: BuffId,
 	pub name: String,
 }
-impl TryFromProto<&ProtoBuffData> for BuffData {
-	fn try_from_proto(b: &ProtoBuffData) -> Option<Self> {
+impl TryFromProto<ProtoBuffData> for BuffData {
+	#[inline]
+	fn try_from_proto(b: ProtoBuffData) -> Option<Self> {
 		Some(Self {
 			id: BuffId::from_u32(b.buff_id())?,
 			name: b.name().to_string(),
@@ -381,8 +410,9 @@ pub struct EffectData {
 	/// `true` if effect affects allied units.
 	pub friendly_fire: bool,
 }
-impl TryFromProto<&ProtoEffectData> for EffectData {
-	fn try_from_proto(e: &ProtoEffectData) -> Option<Self> {
+impl TryFromProto<ProtoEffectData> for EffectData {
+	#[inline]
+	fn try_from_proto(e: ProtoEffectData) -> Option<Self> {
 		EffectId::from_u32(e.effect_id()).map(|id| Self {
 			id,
 			name: e.name().to_string(),

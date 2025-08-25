@@ -766,11 +766,18 @@ fn launch_client(sc2_path: &str, port: i32, sc2_version: Option<&str>) -> Child 
 }
 
 fn connect_to_websocket(host: &str, port: i32) -> SC2Result<WS> {
+	use std::{thread, time::Duration};
 	let url = format!("ws://{}:{}/sc2api", host, port);
-	let (ws, _rs) = loop {
-		if let Ok(result) = connect(&url) {
-			break result;
+
+	let mut backoff = Duration::from_millis(100);
+	loop {
+		match connect(&url) {
+			Ok((ws, _)) => return Ok(ws),
+			Err(e) => {
+				error!("connect failed: {e}; retrying in {:?}", backoff);
+				thread::sleep(backoff);
+				backoff = (backoff * 2).min(Duration::from_secs(2));
+			}
 		}
-	};
-	Ok(ws)
+	}
 }

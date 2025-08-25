@@ -1919,6 +1919,7 @@ impl From<Unit> for Point2 {
 }
 
 impl Unit {
+	#[inline]
 	pub(crate) fn from_proto(data: SharedUnitData, visibility: &VisibilityMap, u: &ProtoUnit) -> Self {
 		let pos = u.pos.deref();
 		let position = Point2::from_proto(pos);
@@ -2076,6 +2077,7 @@ pub enum DisplayType {
 }
 
 impl FromProto<ProtoDisplayType> for DisplayType {
+	#[inline]
 	fn from_proto(display_type: ProtoDisplayType) -> Self {
 		match display_type {
 			ProtoDisplayType::Visible => DisplayType::Visible,

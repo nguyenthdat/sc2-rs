@@ -350,6 +350,7 @@ pub struct PsionicMatrix {
 	pub tag: u64,
 }
 impl FromProto<&ProtoPowerSource> for PsionicMatrix {
+	#[inline]
 	fn from_proto(ps: &ProtoPowerSource) -> Self {
 		Self {
 			pos: Point2::from_proto(ps.pos.deref()),
@@ -404,6 +405,7 @@ impl Alliance {
 	}
 }
 impl FromProto<ProtoAlliance> for Alliance {
+	#[inline]
 	fn from_proto(alliance: ProtoAlliance) -> Self {
 		match alliance {
 			ProtoAlliance::Self_ => Alliance::Own,
@@ -480,6 +482,7 @@ pub enum Alert {
 	WarpInComplete,
 }
 impl FromProto<ProtoAlert> for Alert {
+	#[inline]
 	fn from_proto(alert: ProtoAlert) -> Self {
 		match alert {
 			ProtoAlert::AlertError => Alert::AlertError,

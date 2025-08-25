@@ -41,6 +41,7 @@ pub struct GameInfo {
 	pub map_center: Point2,
 }
 impl FromProto<ResponseGameInfo> for GameInfo {
+	#[inline]
 	fn from_proto(game_info: ResponseGameInfo) -> Self {
 		let start_raw = game_info.start_raw.deref();
 		let map_size = start_raw.map_size.deref();

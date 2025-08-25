@@ -37,6 +37,7 @@ fn to_binary(n: u8) -> impl Iterator<Item = Pixel> {
 }
 
 impl FromProto<&ImageData> for PixelMap {
+	#[inline]
 	fn from_proto(grid: &ImageData) -> Self {
 		let size = grid.size.deref();
 		Array2::from_shape_vec(
@@ -48,6 +49,7 @@ impl FromProto<&ImageData> for PixelMap {
 	}
 }
 impl FromProto<&ImageData> for ByteMap {
+	#[inline]
 	fn from_proto(grid: &ImageData) -> Self {
 		let size = grid.size.deref();
 		Array2::from_shape_vec((size.y() as usize, size.x() as usize), grid.data().to_vec())
@@ -56,6 +58,7 @@ impl FromProto<&ImageData> for ByteMap {
 	}
 }
 impl FromProto<&ImageData> for VisibilityMap {
+	#[inline]
 	fn from_proto(grid: &ImageData) -> Self {
 		let size = grid.size.deref();
 		Array2::from_shape_vec(

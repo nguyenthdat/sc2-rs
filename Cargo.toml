@@ -59,3 +59,8 @@ protoc = ["sc2-proto/protoc-rust"]
 enemies_cache = []
 wine_sc2 = []
 rayon = ["dep:rayon", "indexmap/rayon", "ndarray/rayon"]
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1

@@ -28,6 +28,7 @@ pub enum Race {
 	Random,
 }
 impl FromProto<ProtoRace> for Race {
+	#[inline]
 	fn from_proto(race: ProtoRace) -> Self {
 		match race {
 			ProtoRace::Terran => Race::Terran,
@@ -39,6 +40,7 @@ impl FromProto<ProtoRace> for Race {
 	}
 }
 impl IntoProto<ProtoRace> for Race {
+	#[inline]
 	fn into_proto(self) -> ProtoRace {
 		match self {
 			Race::Terran => ProtoRace::Terran,
@@ -65,6 +67,7 @@ pub enum Difficulty {
 	CheatInsane,
 }
 impl FromProto<ProtoDifficulty> for Difficulty {
+	#[inline]
 	fn from_proto(difficulty: ProtoDifficulty) -> Self {
 		match difficulty {
 			ProtoDifficulty::VeryEasy => Difficulty::VeryEasy,
@@ -81,6 +84,7 @@ impl FromProto<ProtoDifficulty> for Difficulty {
 	}
 }
 impl IntoProto<ProtoDifficulty> for Difficulty {
+	#[inline]
 	fn into_proto(self) -> ProtoDifficulty {
 		match self {
 			Difficulty::VeryEasy => ProtoDifficulty::VeryEasy,
@@ -110,6 +114,7 @@ pub enum AIBuild {
 	Air,
 }
 impl FromProto<ProtoAIBuild> for AIBuild {
+	#[inline]
 	fn from_proto(ai_build: ProtoAIBuild) -> Self {
 		match ai_build {
 			ProtoAIBuild::RandomBuild => AIBuild::RandomBuild,
@@ -122,6 +127,7 @@ impl FromProto<ProtoAIBuild> for AIBuild {
 	}
 }
 impl IntoProto<ProtoAIBuild> for AIBuild {
+	#[inline]
 	fn into_proto(self) -> ProtoAIBuild {
 		match self {
 			AIBuild::RandomBuild => ProtoAIBuild::RandomBuild,
@@ -145,6 +151,7 @@ pub enum PlayerType {
 	Observer,
 }
 impl FromProto<ProtoPlayerType> for PlayerType {
+	#[inline]
 	fn from_proto(player_type: ProtoPlayerType) -> Self {
 		match player_type {
 			ProtoPlayerType::Participant => PlayerType::Participant,
@@ -154,6 +161,7 @@ impl FromProto<ProtoPlayerType> for PlayerType {
 	}
 }
 impl IntoProto<ProtoPlayerType> for PlayerType {
+	#[inline]
 	fn into_proto(self) -> ProtoPlayerType {
 		match self {
 			PlayerType::Participant => ProtoPlayerType::Participant,
@@ -190,6 +198,7 @@ pub enum GameResult {
 	Undecided,
 }
 impl FromProto<ProtoGameResult> for GameResult {
+	#[inline]
 	fn from_proto(player_type: ProtoGameResult) -> Self {
 		match player_type {
 			ProtoGameResult::Victory => GameResult::Victory,

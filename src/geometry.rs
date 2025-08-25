@@ -409,11 +409,13 @@ impl Sum for Point2 {
 }
 
 impl FromProto<&Point2D> for Point2 {
+	#[inline]
 	fn from_proto(p: &Point2D) -> Self {
 		Self { x: p.x(), y: p.y() }
 	}
 }
 impl FromProto<&Point> for Point2 {
+	#[inline]
 	fn from_proto(p: &Point) -> Self {
 		Self { x: p.x(), y: p.y() }
 	}
@@ -580,6 +582,7 @@ impl Sum for Point3 {
 	}
 }
 impl FromProto<&Point> for Point3 {
+	#[inline]
 	fn from_proto(p: &Point) -> Self {
 		Self {
 			x: p.x(),

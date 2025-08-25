@@ -13,6 +13,7 @@ pub enum ScoreType {
 	Melee,
 }
 impl FromProto<score::ScoreType> for ScoreType {
+	#[inline]
 	fn from_proto(score_type: score::ScoreType) -> Self {
 		match score_type {
 			score::ScoreType::Curriculum => ScoreType::Curriculum,
@@ -30,6 +31,7 @@ pub struct Category {
 	pub upgrade: f32,
 }
 impl FromProto<&CategoryScoreDetails> for Category {
+	#[inline]
 	fn from_proto(category: &CategoryScoreDetails) -> Self {
 		Self {
 			none: category.none(),
@@ -48,6 +50,7 @@ pub struct Vital {
 	pub energy: f32,
 }
 impl FromProto<&VitalScoreDetails> for Vital {
+	#[inline]
 	fn from_proto(vital: &VitalScoreDetails) -> Self {
 		Self {
 			life: vital.life(),
@@ -95,6 +98,7 @@ pub struct Score {
 	pub current_effective_apm: f32,
 }
 impl FromProto<&ProtoScore> for Score {
+	#[inline]
 	fn from_proto(score: &ProtoScore) -> Self {
 		let details = score.score_details.deref();
 		Self {

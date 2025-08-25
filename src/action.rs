@@ -85,6 +85,7 @@ impl IntoProto<ProtoAction> for &Action {
 }
 
 impl FromProto<&ProtoAction> for Option<Action> {
+	#[inline]
 	fn from_proto(action: &ProtoAction) -> Self {
 		if let Some(raw) = action.action_raw.as_ref() {
 			match &raw.action {
@@ -135,6 +136,7 @@ pub struct ActionError {
 	pub result: ActionResult,
 }
 impl FromProto<&ProtoActionError> for ActionError {
+	#[inline]
 	fn from_proto(e: &ProtoActionError) -> Self {
 		Self {
 			unit: e.unit_tag.unwrap_or_default(),
@@ -367,6 +369,7 @@ pub enum ActionResult {
 	CantFindCancelOrder,
 }
 impl FromProto<ProtoActionResult> for ActionResult {
+	#[inline]
 	fn from_proto(result: ProtoActionResult) -> Self {
 		match result {
 			ProtoActionResult::Success => ActionResult::Success,
