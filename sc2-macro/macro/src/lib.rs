@@ -1,28 +1,26 @@
-#[macro_use]
-extern crate quote;
-
 use proc_macro::TokenStream;
+use quote::{format_ident, quote};
 use regex::Regex;
-use syn::{
-	Attribute, Data, DeriveInput, Fields, ItemEnum, ItemFn, ItemStruct, Meta, NestedMeta, parse_macro_input,
-};
+use syn::{Attribute, Data, DeriveInput, Fields, ItemEnum, ItemFn, ItemStruct, parse_macro_input};
 
 #[proc_macro_attribute]
 pub fn bot(_attr: TokenStream, item: TokenStream) -> TokenStream {
-	// let attr = parse_macro_input!(attr as AttributeArgs);
 	let item = parse_macro_input!(item as ItemStruct);
 
 	let name = item.ident;
 	let vis = item.vis;
 	let attrs = item.attrs;
 	let generics = item.generics;
-	let fields = match item.fields {
-		Fields::Named(named_fields) => {
-			let named = named_fields.named;
-			quote! {#named}
+
+	// Keep tuple structs rejected; allow unit or named.
+	// In syn v2, `Fields` still implements `ToTokens` so `quote!{#other}` works for Unit. :contentReference[oaicite:0]{index=0}
+	let fields_tokens = match &item.fields {
+		Fields::Named(named) => {
+			let named = &named.named;
+			quote! { #named }
 		}
 		Fields::Unnamed(_) => panic!("#[bot] is not allowed for tuple structs"),
-		unit => quote! {#unit},
+		other => quote! { #other }, // Unit → prints nothing inside braces below
 	};
 
 	let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
@@ -31,68 +29,54 @@ pub fn bot(_attr: TokenStream, item: TokenStream) -> TokenStream {
 		#(#attrs)*
 		#vis struct #name #ty_generics {
 			_bot: sc2::bot::Bot,
-			#fields
+			#fields_tokens
 		}
+
 		impl #impl_generics std::ops::Deref for #name #ty_generics #where_clause {
 			type Target = sc2::bot::Bot;
-
-			fn deref(&self) -> &Self::Target {
-				&self._bot
-			}
+			fn deref(&self) -> &Self::Target { &self._bot }
 		}
-		impl #impl_generics  std::ops::DerefMut for #name #ty_generics #where_clause {
-			fn deref_mut(&mut self) -> &mut Self::Target {
-				&mut self._bot
-			}
+
+		impl #impl_generics std::ops::DerefMut for #name #ty_generics #where_clause {
+			fn deref_mut(&mut self) -> &mut Self::Target { &mut self._bot }
 		}
 	})
 }
 
 #[proc_macro_attribute]
 pub fn bot_new(_attr: TokenStream, item: TokenStream) -> TokenStream {
-	// let attr = parse_macro_input!(attr as AttributeArgs);
 	let item = parse_macro_input!(item as ItemFn);
 
 	let vis = item.vis;
 	let signature = item.sig;
+
+	// In syn v2, Stmt::Expr carries an optional semicolon: `Stmt::Expr(Expr, Option<Semi>)`. :contentReference[oaicite:1]{index=1}
 	let blocks = item.block.stmts.iter().map(|s| {
-		if let syn::Stmt::Expr(expr) = s {
+		if let syn::Stmt::Expr(expr, semi) = s {
 			if let syn::Expr::Struct(struct_expr) = expr {
 				let path = &struct_expr.path;
-				let rest = match &struct_expr.rest {
-					Some(expr) => quote! {#expr},
-					None => quote! {},
-				};
+				// In syn v2, `ExprStruct.rest` is `Option<(Token![..], Expr)>`. :contentReference[oaicite:2]{index=2}
+				let rest = struct_expr.rest.as_ref().map(|e| quote! { ..#e });
+
 				let fields = struct_expr.fields.iter();
 
-				return quote! {
+				let body = quote! {
 					#path {
 						_bot: Default::default(),
-						#(#fields,)*
-						..#rest
+						#(#fields, )*
+						#rest
 					}
 				};
-			}
-		}
-		if let syn::Stmt::Semi(expr, _) = s {
-			if let syn::Expr::Struct(struct_expr) = expr {
-				let path = &struct_expr.path;
-				let rest = match &struct_expr.rest {
-					Some(expr) => quote! {#expr},
-					None => quote! {},
-				};
-				let fields = struct_expr.fields.iter();
 
-				return quote! {
-					#path {
-						_bot: Default::default(),
-						#(#fields,)*
-						..#rest
-					};
+				return if semi.is_some() {
+					quote! { #body; }
+				} else {
+					quote! { #body }
 				};
 			}
 		}
-		quote! {#s}
+		// Fallback: keep the original statement as-is.
+		quote! { #s }
 	});
 
 	TokenStream::from(quote! {
@@ -108,27 +92,23 @@ pub fn enum_from_str_derive(input: TokenStream) -> TokenStream {
 	if let Data::Enum(data) = item.data {
 		let name = item.ident;
 		let variants = data.variants.iter().map(|v| &v.ident);
-		// let variants2 = variants.clone().map(|v| format!("{}::{}", name, v));
 
+		// `Attribute::parse_meta` and `NestedMeta` are gone in v2.
+		// Use `Attribute::parse_nested_meta` and `attr.path().is_ident(..)`. :contentReference[oaicite:3]{index=3}
 		let additional_attributes = |a: &Attribute| {
-			if a.path.is_ident("enum_from_str") {
-				match a.parse_meta().unwrap() {
-					Meta::List(list) => {
-						return list.nested.iter().any(|n| {
-							if let NestedMeta::Meta(Meta::Path(path)) = n {
-								path.is_ident("use_primitives")
-							} else {
-								false
-							}
-						});
+			if a.path().is_ident("enum_from_str") {
+				let mut use_primitives = false;
+				let _ = a.parse_nested_meta(|meta| {
+					if meta.path.is_ident("use_primitives") {
+						use_primitives = true;
 					}
-					_ => {
-						unreachable!("No options found in attribute `enum_from_str`")
-					}
-				}
+					Ok(())
+				});
+				return use_primitives;
 			}
 			false
 		};
+
 		let other_cases = if item.attrs.iter().any(additional_attributes) {
 			quote! {
 				n => {
@@ -141,18 +121,16 @@ pub fn enum_from_str_derive(input: TokenStream) -> TokenStream {
 				}
 			}
 		} else {
-			quote! {_ => return Err(sc2_macro::ParseEnumError)}
+			quote! { _ => return Err(sc2_macro::ParseEnumError) }
 		};
+
 		TokenStream::from(quote! {
 			impl std::str::FromStr for #name {
 				type Err = sc2_macro::ParseEnumError;
-
 				fn from_str(s: &str) -> Result<Self, Self::Err> {
 					Ok(match s {
 						#(
 							stringify!(#variants) => Self::#variants,
-							// #variants2 => Self::#variants,
-
 						)*
 						#other_cases,
 					})
@@ -166,7 +144,6 @@ pub fn enum_from_str_derive(input: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 pub fn variant_checkers(_attr: TokenStream, item: TokenStream) -> TokenStream {
-	// let attr = parse_macro_input!(attr as AttributeArgs);
 	let item = parse_macro_input!(item as ItemEnum);
 
 	let name = &item.ident;
