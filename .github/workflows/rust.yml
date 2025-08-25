@@ -26,18 +26,18 @@ jobs:
       uses: actions/cache@v2
       with:
           path: ~/.cargo/registry
-          key: ${{ runner.os }}-${{ steps.rustup.outputs.rustc_hash }}-dev-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-dev-registry-${{ hashFiles('**/Cargo.lock') }}
     - name: Cache cargo index
       uses: actions/cache@v2
       with:
           path: ~/.cargo/git
-          key: ${{ runner.os }}-${{ steps.rustup.outputs.rustc_hash }}-dev-index-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-dev-index-${{ hashFiles('**/Cargo.lock') }}
     - name: Cache cargo build
       uses: actions/cache@v2
       with:
           path: |
             target
-          key: ${{ runner.os }}-${{ steps.rustup.outputs.rustc_hash }}-dev-target-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-dev-target-${{ hashFiles('**/Cargo.lock') }}
     - name: Build library
       run: cargo build --lib --verbose
 #     - name: Run tests
